@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
 import './App.css';
-const initData = window.WebApp.initDataUnsafe;
+
 const mx=window.WebApp;
 if (initData && initData.user) {
-    console.log('ID пользователя:', initData.user.id);
-    console.log('Имя:', initData.user.first_name);
-    console.log('Язык:', initData.user.language_code);
-    console.log('Тип чата:', initData.chat?.type);
+    console.log('ID пользователя:', mx.initDataUnsafe.initData.user.id);
+    console.log('Имя:', mx.initDataUnsafe.initData.user.first_name);
+    console.log('Язык:', mx.initDataUnsafe.initData.user.language_code);
+    console.log('Тип чата:', mx.initDataUnsafe.initData.chat?.type);
     
     // Параметр, переданный через диплинк (например, ?startapp=someData)
-    console.log('Параметр запуска:', initData.start_param);
+    console.log('Параметр запуска:', mx.initDataUnsafe.initData.start_param);
 }
 
 function App() {

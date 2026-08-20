@@ -1,16 +1,16 @@
-import { Button } from "@maxhub/max-ui";
-import React from "react";
+import React from 'react';
 import Button from "../Button/Button";
-const mx=window.WebApp;
-const Header =()=>{
-    const onClose=()=>{
-    mx.close();
-  }
+import { useMax } from '../../hooks/useMax';
+import './Header.css';
+
+const Header = () => {
+    const {user, onClose} = useMax();
+
     return (
         <div className={'header'}>
             <Button onClick={onClose}>Закрыть</Button>
-            <span className={'username'}>{mx.initDataUnsafe?.initData?.user?.first_name}
-
+            <span className={'username'}>
+                {user?.username}
             </span>
         </div>
     );
