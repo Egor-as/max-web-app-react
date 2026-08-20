@@ -16,13 +16,9 @@ function App() {
   useEffect(()=>{
     mx.ready();
   }, [])
-  const onClose=()=>{
-    mx.close();
-  }
   
   return (
     <div className="App">
-      work
       <button onClick={onClose}>Закрыть</button>
     </div>
   );
