@@ -1,26 +1,27 @@
-import { useEffect } from 'react';
+import React, { useState } from 'react';
+import { CartProvider } from './components/CartContext';
+import Header from './components/Header';
+import ProductList from './components/ProductList';
+import Cart from './components/Cart';
+import Checkout from './components/Checkout';
 import './App.css';
-const initData = window.WebApp.initDataUnsafe;
-const mx=window.WebApp;
-if (initData && initData.user) {
-    console.log('ID пользователя:', initData.user.id);
-    console.log('Имя:', initData.user.first_name);
-    console.log('Язык:', initData.user.language_code);
-    console.log('Тип чата:', initData.chat?.type);
-    
-    // Параметр, переданный через диплинк (например, ?startapp=someData)
-    console.log('Параметр запуска:', initData.start_param);
-}
 
 function App() {
-  useEffect(()=>{
-    mx.ready();
-  }, [])
-  
+  const [page, setPage] = useState('catalog'); // catalog, cart, checkout
+
   return (
-    <div className="App">
-      <button onClick={onClose}>Закрыть</button>
-    </div>
+    <CartProvider>
+      <div className="app">
+        <Header onCartClick={() => setPage('cart')} />
+        {page === 'catalog' && <ProductList />}
+        {page === 'cart' && (
+          <Cart onCheckout={() => setPage('checkout')} />
+        )}
+        {page === 'checkout' && (
+          <Checkout onBack={() => setPage('cart')} />
+        )}
+      </div>
+    </CartProvider>
   );
 }
 

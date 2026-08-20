@@ -1,10 +1,5 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background:wheat;
-  color: black;
-}
+.app { padding: 16px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.product-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+.product-card { text-align: center; }
+.cart-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
