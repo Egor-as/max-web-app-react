@@ -6,11 +6,10 @@ import { CartProvider } from './components/CartContext';
 
 // Проверяем, что приложение запущено внутри MAX (для отладки)
 if (window.WebApp) {
-  // Можно выполнить дополнительные действия при готовности WebApp
-  window.WebApp.ready();        // сообщает платформе, что приложение готово
+  window.WebApp.ready();
   console.log('Mini App запущено в MAX');
 } else {
-  console.warn('Приложение запущено вне MAX, некоторые функции могут не работать');
+  console.warn('Приложение запущено вне MAX');
 }
 
 // Создаём корневой элемент React
