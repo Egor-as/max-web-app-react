@@ -1,35 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react'; // Убрали неиспользуемый useState
 import './App.css';
 
-// Получаем глобальный объект MAX Bridge
+// ВНИМАНИЕ: Убедись, что мессенджер Max использует именно window.WebApp. 
+// Если их SDK называется иначе (например, window.MaxWebApp), измени это название.
 const mx = window.WebApp;
 
 function App() {
-  // Безопасно извлекаем данные из initDataUnsafe (это объект, а не строка)
+  // Безопасно извлекаем данные. initDataUnsafe подходит ТОЛЬКО для отображения на фронтенде.
+  // Для авторизации на бэкенде нужно использовать подписанную строку mx.initData
   const initDataUnsafe = mx?.initDataUnsafe || {};
   const user = initDataUnsafe.user;
   const chat = initDataUnsafe.chat;
   const startParam = initDataUnsafe.start_param;
 
   useEffect(() => {
-    // Сообщаем MAX, что приложение готово к отображению
+    // Сообщаем мессенджеру, что приложение готово к отображению
     if (mx) {
       mx.ready();
       
-      // Логируем данные для отладки (используем initDataUnsafe для чтения на фронтенде)
+      // Разворачиваем приложение на весь экран (рекомендуемая практика для мини-аппов)
+      if (mx.expand) {
+        mx.expand();
+      }
+
+      // Логируем данные для отладки
       if (user) {
+        console.log('MAX Web App инициализирован');
         console.log('ID пользователя:', user.id);
         console.log('Имя:', user.first_name);
         console.log('Язык:', user.language_code);
         console.log('Тип чата:', chat?.type);
         console.log('Параметр запуска:', startParam);
+      } else {
+        console.warn('Данные пользователя не найдены в initDataUnsafe');
       }
+    } else {
+      console.error('Объект WebApp не найден. Приложение запущено вне мессенджера?');
     }
-  }, [user, chat, startParam]);
+    // Эффект должен сработать только один раз при монтировании
+  }, []); 
 
   const onClose = () => {
-    if (mx) {
+    if (mx?.close) {
       mx.close();
+    } else {
+      console.log('Метод close() недоступен');
     }
   };
 
@@ -39,17 +54,25 @@ function App() {
       
       {user ? (
         <div>
-          <p>Привет, {user.first_name} {user.last_name || ''}!</p>
+          {/* Аккуратное форматирование имени и фамилии без лишних пробелов */}
+          <p>
+            Привет, {user.first_name}{user.last_name ? ` ${user.last_name}` : ''}!
+          </p>
           <p>ID: {user.id}</p>
           <p>Username: @{user.username || 'не указан'}</p>
+          
           {chat && <p>Открыто в: {chat.type}</p>}
           {startParam && <p>Параметр запуска: {startParam}</p>}
         </div>
       ) : (
-        <p>Данные пользователя недоступны (возможно, запуск вне чата)</p>
+        <p style={{ color: 'red' }}>
+          Данные пользователя недоступны. Убедитесь, что приложение открыто внутри мессенджера Max.
+        </p>
       )}
       
-      <button onClick={onClose}>Закрыть</button>
+      <button onClick={onClose} style={{ marginTop: '20px', padding: '10px 20px' }}>
+        Закрыть приложение
+      </button>
     </div>
   );
 }
