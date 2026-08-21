@@ -4,8 +4,20 @@ import ProductItem from '../ProductItem/ProductItem';
 import { useMax } from '../../hooks/useMax';
 
 const products = [
-    { id: '1', title: 'Джинсы', price: 5000, description: 'Синего цвета, прямые', image: 'https://placehold.co/400x300/e0e0e0/333333?text=Джинсы' },
-    { id: '2', title: 'Куртка', price: 12000, description: 'Зеленого цвета, теплая', image: 'https://placehold.co/400x300/e0e0e0/333333?text=Куртка' },
+    { 
+        id: '1', 
+        title: 'Джинсы', 
+        price: 5000, 
+        description: 'Синего цвета, прямые', 
+        image: '/images/jeans.jpg' 
+    },
+    { 
+        id: '2', 
+        title: 'Куртка', 
+        price: 12000, 
+        description: 'Зеленого цвета, теплая', 
+        image: '/images/jacket.jpg' 
+    },
 ];
 
 const getTotalPrice = (items = []) => {
