@@ -1,66 +1,135 @@
-const onSendData = useCallback(async () => {
-    console.log('🔵 Кнопка "Оформить заказ" нажата');
-    console.log('🔵 isSubmitting:', isSubmitting);
-    console.log('🔵 cartItems:', cartItems);
-    
-    if (isSubmitting) {
-        console.warn('⚠️ Запрос уже выполняется, игнорируем повторный клик');
-        return;
-    }
+import React, { useState, useCallback } from 'react';
+import './ProductList.css';
+import ProductItem from '../ProductItem/ProductItem';
+import { useMax } from '../../hooks/useMax';
 
-    setIsSubmitting(true);
-    console.log('🔵 Начинаем отправку заказа...');
+const products = [
+    { id: '1', title: 'Джинсы', price: 5000, description: 'Синего цвета, прямые', image: 'https://placehold.co/400x300/e0e0e0/333333?text=Джинсы' },
+    { id: '2', title: 'Куртка', price: 12000, description: 'Зеленого цвета, теплая', image: 'https://placehold.co/400x300/e0e0e0/333333?text=Куртка' },
+];
 
-    try {
-        const payload = {
-            items: cartItems.map(item => ({ id: item.id, quantity: item.quantity })),
-            queryId,
-        };
-        
-        console.log('🔵 Payload для отправки:', payload);
-        console.log('🔵 URL:', 'https://85.119.146.179:8000/web-data');
+const getTotalPrice = (items = []) => {
+    return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+};
 
-        const response = await fetch('https://85.119.146.179:8000/web-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+const ProductList = () => {
+    const [cartItems, setCartItems] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { mx, queryId } = useMax();
+
+    const updateQuantity = useCallback((product, delta) => {
+        if (mx?.HapticFeedback) {
+            mx.HapticFeedback.impactOccurred('light');
+        }
+
+        setCartItems(prevItems => {
+            const existingItem = prevItems.find(item => item.id === product.id);
+
+            if (delta > 0) {
+                if (existingItem) {
+                    return prevItems.map(item =>
+                        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                    );
+                }
+                return [...prevItems, { ...product, quantity: 1 }];
+            } else {
+                if (existingItem && existingItem.quantity > 1) {
+                    return prevItems.map(item =>
+                        item.id === product.id ? { ...item, quantity: item.quantity - 1 } : item
+                    );
+                }
+                return prevItems.filter(item => item.id !== product.id);
+            }
         });
+    }, [mx]);
 
-        console.log('🔵 Получен ответ от сервера, статус:', response.status);
+    const onSendData = useCallback(async () => {
+        console.log('🔵 Кнопка "Оформить заказ" нажата');
+        if (isSubmitting) return;
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Ошибка сервера:', response.status, errorText);
-            throw new Error(`Ошибка сервера: ${response.status}`);
+        setIsSubmitting(true);
+        console.log('🔵 Начинаем отправку заказа...');
+
+        try {
+            const payload = {
+                items: cartItems.map(item => ({ id: item.id, quantity: item.quantity })),
+                queryId,
+            };
+            
+            console.log('🔵 Payload:', payload);
+
+            const response = await fetch('https://85.119.146.179:8000/web-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            console.log('🔵 Ответ сервера, статус:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Ошибка сервера:', response.status, errorText);
+                throw new Error(`Ошибка сервера: ${response.status}`);
+            }
+
+            console.log('✅ Заказ успешно оформлен!');
+            setCartItems([]);
+            
+            if (mx?.showAlert) {
+                mx.showAlert({ message: 'Заказ успешно оформлен!' });
+            } else {
+                alert('Заказ успешно оформлен!');
+            }
+            
+            if (mx?.close) mx.close();
+
+        } catch (error) {
+            console.error('❌ Критическая ошибка при отправке:', error);
+            if (mx?.showAlert) {
+                mx.showAlert({ message: `Ошибка: ${error.message}` });
+            } else {
+                alert(`Не удалось оформить заказ: ${error.message}`);
+            }
+        } finally {
+            console.log('🔵 Сбрасываем isSubmitting');
+            setIsSubmitting(false);
         }
+    }, [cartItems, isSubmitting, mx, queryId]);
 
-        const result = await response.json();
-        console.log('✅ Заказ успешно оформлен!', result);
+    const total = getTotalPrice(cartItems);
+    const isCartEmpty = cartItems.length === 0;
 
-        setCartItems([]);
-        
-        if (mx?.showAlert) {
-            mx.showAlert({ message: 'Заказ успешно оформлен!' });
-        } else {
-            alert('Заказ успешно оформлен!');
-        }
-        
-        if (mx?.close) mx.close();
+    return (
+        <div className="list">
+            {products.map(item => {
+                const cartItem = cartItems.find(ci => ci.id === item.id);
+                const quantity = cartItem ? cartItem.quantity : 0;
 
-    } catch (error) {
-        console.error('❌ Критическая ошибка при отправке заказа:', error);
-        console.error('❌ Тип ошибки:', error.name);
-        console.error('❌ Сообщение:', error.message);
-        
-        // Показываем ошибку пользователю
-        const errorMessage = error.message || 'Неизвестная ошибка';
-        if (mx?.showAlert) {
-            mx.showAlert({ message: `Ошибка: ${errorMessage}` });
-        } else {
-            alert(`Не удалось оформить заказ.\nДетали: ${errorMessage}`);
-        }
-    } finally {
-        console.log('🔵 Завершаем отправку, сбрасываем isSubmitting');
-        setIsSubmitting(false);
-    }
-}, [cartItems, isSubmitting, mx, queryId]);
+                return (
+                    <ProductItem
+                        key={item.id}
+                        product={item}
+                        quantity={quantity}
+                        onUpdateQuantity={updateQuantity}
+                        className="item"
+                    />
+                );
+            })}
+
+            {!isCartEmpty && (
+                <div className="bottom-action-bar">
+                    <button 
+                        className="custom-main-button"
+                        onClick={onSendData}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Оформление...' : `Оформить заказ на ${total.toLocaleString('ru-RU')} ₽`}
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ЭТА СТРОКА ОБЯЗАТЕЛЬНА! Она должна быть в самом низу файла.
+export default ProductList;
