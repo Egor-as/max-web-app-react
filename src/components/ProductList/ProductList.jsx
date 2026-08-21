@@ -3,9 +3,6 @@ import './ProductList.css';
 import ProductItem from '../ProductItem/ProductItem';
 import { useMax } from '../../hooks/useMax';
 
-// 🔥 СИГНАЛЬНАЯ РАКЕТА
-alert('Компонент ProductList начал рендериться!');
-
 const products = [
     // ... твой массив товаров
     { 
