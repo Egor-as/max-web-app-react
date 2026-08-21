@@ -2,24 +2,9 @@ import React from 'react';
 import Button from "../Button/Button";
 import './ProductItem.css';
 
-const ProductItem = ({ product, className, onAdd }) => {
-    // Защита от undefined product
-    if (!product) {
-        return null;
-    }
+const ProductItem = ({ product, className, quantity = 0, onUpdateQuantity }) => {
+    if (!product) return null;
 
-    const onAddHandler = () => {
-        if (onAdd) {
-            onAdd(product);
-        } else {
-            console.warn('Функция onAdd не передана в ProductItem');
-        }
-    };
-
-    // Безопасное объединение классов
-    const finalClassName = `product ${className || ''}`.trim();
-
-    // Форматирование цены (пример для рублей)
     const formattedPrice = new Intl.NumberFormat('ru-RU', {
         style: 'currency',
         currency: 'RUB',
@@ -27,14 +12,9 @@ const ProductItem = ({ product, className, onAdd }) => {
     }).format(product.price);
 
     return (
-        <div className={finalClassName}>
-            {/* Изображение товара */}
+        <div className={`product ${className || ''}`.trim()}>
             {product.image ? (
-                <img 
-                    src={product.image} 
-                    alt={product.title}
-                    className="img"
-                />
+                <img src={product.image} alt={product.title} className="img" />
             ) : (
                 <div className="img-placeholder">Нет изображения</div>
             )}
@@ -46,16 +26,32 @@ const ProductItem = ({ product, className, onAdd }) => {
                 <span>Стоимость: <b>{formattedPrice}</b></span>
             </div>
             
-            <Button 
-                className="add-btn" 
-                onClick={onAddHandler}
-                disabled={!onAdd}
-            >
-                Добавить в корзину
-            </Button>
+            {/* Условный рендеринг: кнопка или счетчик */}
+            {quantity === 0 ? (
+                <Button className="add-btn" onClick={() => onUpdateQuantity(product, 1)}>
+                    В корзину
+                </Button>
+            ) : (
+                <div className="quantity-control">
+                    <button 
+                        className="qty-btn" 
+                        onClick={() => onUpdateQuantity(product, -1)}
+                        aria-label="Уменьшить количество"
+                    >
+                        −
+                    </button>
+                    <span className="qty-value">{quantity}</span>
+                    <button 
+                        className="qty-btn" 
+                        onClick={() => onUpdateQuantity(product, 1)}
+                        aria-label="Увеличить количество"
+                    >
+                        +
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
 
-// Оптимизация: компонент перерисовывается только при изменении пропсов
 export default React.memo(ProductItem);
