@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import './Form.css';
 import { useMax } from '../../hooks/useMax';
 
@@ -6,47 +6,57 @@ const Form = () => {
     const [country, setCountry] = useState('');
     const [street, setStreet] = useState('');
     const [subject, setSubject] = useState('physical');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
     const { mx } = useMax();
 
+    // Проверка валидности формы
+    const isFormValid = country.trim().length > 0 && street.trim().length > 0;
+
     // Функция отправки данных
-    const onSendData = useCallback(() => {
-        if (!mx) return; // Защита на случай, если mx исчезнет
+    const onSendData = useCallback(async () => {
+        if (!isFormValid || isSubmitting || !mx) return;
 
-        const data = { country, street, subject };
-        mx.sendData(JSON.stringify(data));
-    }, [country, street, subject, mx]); // Добавили mx в зависимости
+        setIsSubmitting(true);
 
-    // Единый эффект для управления MainButton
-    useEffect(() => {
-        // Защита от обращения к несуществующему объекту
-        if (!mx || !mx.MainButton) {
-            console.warn('MainButton недоступна');
-            return;
+        // Виброотклик при отправке (если поддерживается)
+        if (mx.HapticFeedback) {
+            mx.HapticFeedback.impactOccurred('medium');
         }
 
-        // Настройка параметров кнопки (текст)
-        mx.MainButton.setParams({
-            text: 'Отправить данные'
-        });
+        try {
+            const data = {
+                country: country.trim(),
+                street: street.trim(),
+                subject
+            };
 
-        // Проверка валидности: пустая строка !== undefined/null, но мы проверяем именно длину
-        const isFormValid = country.trim().length > 0 && street.trim().length > 0;
+            // Отправка данных через встроенный метод sendData
+            // (в Max это работает через window.WebApp.sendData)
+            mx.sendData(JSON.stringify(data));
 
-        if (isFormValid) {
-            mx.MainButton.show();
-            mx.MainButton.onClick(onSendData); // Подписываемся на клик
-        } else {
-            mx.MainButton.hide();
-            mx.MainButton.offClick(onSendData); // Отписываемся от клика
-        }
-
-        // Cleanup функция для отписки при размонтировании
-        return () => {
-            if (mx && mx.MainButton) {
-                mx.MainButton.offClick(onSendData);
+            // Показываем уведомление об успехе
+            if (mx.showAlert) {
+                mx.showAlert({ message: 'Данные успешно отправлены!' });
+            } else {
+                alert('Данные успешно отправлены!');
             }
-        };
-    }, [country, street, mx, onSendData]); // Зависимости обновляют кнопку при любом изменении
+
+            // Опционально: закрываем приложение после отправки
+            // if (mx.close) mx.close();
+
+        } catch (error) {
+            console.error('Ошибка при отправке данных:', error);
+            
+            if (mx.showAlert) {
+                mx.showAlert({ message: 'Не удалось отправить данные. Попробуйте еще раз.' });
+            } else {
+                alert('Не удалось отправить данные. Попробуйте еще раз.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, [country, street, subject, isFormValid, isSubmitting, mx]);
 
     // Обработчики изменений
     const onChangeCountry = (e) => setCountry(e.target.value);
@@ -56,24 +66,43 @@ const Form = () => {
     return (
         <div className="form">
             <h3>Введите ваши данные</h3>
+            
             <input
                 className="input"
                 type="text"
                 placeholder="Страна"
                 value={country}
                 onChange={onChangeCountry}
+                disabled={isSubmitting}
             />
+            
             <input
                 className="input"
                 type="text"
                 placeholder="Улица"
                 value={street}
                 onChange={onChangeStreet}
+                disabled={isSubmitting}
             />
-            <select value={subject} onChange={onChangeSubject} className="select">
+            
+            <select 
+                value={subject} 
+                onChange={onChangeSubject} 
+                className="select"
+                disabled={isSubmitting}
+            >
                 <option value="physical">Физ. лицо</option>
                 <option value="legal">Юр. лицо</option>
             </select>
+
+            {/* Собственная кнопка вместо MainButton */}
+            <button
+                className="submit-button"
+                onClick={onSendData}
+                disabled={!isFormValid || isSubmitting}
+            >
+                {isSubmitting ? 'Отправка...' : 'Отправить данные'}
+            </button>
         </div>
     );
 };
