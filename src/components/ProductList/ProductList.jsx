@@ -1,9 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './ProductList.css';
 import ProductItem from '../ProductItem/ProductItem';
 import { useMax } from '../../hooks/useMax';
 
+// 🔥 СИГНАЛЬНАЯ РАКЕТА
+alert('Компонент ProductList начал рендериться!');
+
 const products = [
+    // ... твой массив товаров
     { 
         id: '1', 
         title: 'Джинсы', 

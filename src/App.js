@@ -1,65 +1,27 @@
-import { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
 import './App.css';
 import { useMax } from './hooks/useMax';
-import ProductList from './components/ProductList/ProductList';
-import Form from './components/Form/Form';
+
+// ВАЖНО: Проверь, что путь к ProductList правильный! 
+// Если он лежит в другой папке, исправь путь.
+import ProductList from './components/ProductList/ProductList'; 
 
 function App() {
-  const { mx, user, onClose } = useMax();
-  const [showDebug, setShowDebug] = useState(false);
+  const { mx, user } = useMax();
 
   useEffect(() => {
     if (mx) {
       mx.ready();
       if (mx.expand) mx.expand();
-      
-      // Диагностика (можно убрать потом)
-      console.log('✅ Max инициализирован');
-      console.log('Пользователь:', user);
+      console.log('✅ Max инициализирован. Пользователь:', user);
     }
   }, [mx, user]);
 
-  // Временная кнопка для показа диагностики (нажми, если нужно проверить)
-  if (showDebug) {
-    return (
-      <div style={{ padding: '20px', fontSize: '14px' }}>
-        <h3>Диагностика:</h3>
-        <pre style={{ background: '#f0f0f0', padding: '10px', borderRadius: '5px' }}>
-          {JSON.stringify({
-            windowWebApp: !!window.WebApp,
-            user: user,
-            url: window.location.href,
-          }, null, 2)}
-        </pre>
-        <button onClick={() => setShowDebug(false)} style={{ marginTop: '20px', padding: '10px 20px' }}>
-          Вернуться к магазину
-        </button>
-      </div>
-    );
-  }
-
+  // 🔥 ПРЯМОЙ РЕНДЕР: Никаких роутов и дебаг-кнопок
   return (
-    <div className="App">
-      {/* Кнопка диагностики (можно убрать потом) */}
-      <button 
-        onClick={() => setShowDebug(true)}
-        style={{ 
-          position: 'fixed', 
-          top: '10px', 
-          right: '10px', 
-          padding: '5px 10px',
-          fontSize: '12px',
-          zIndex: 9999
-        }}
-      >
-        Debug
-      </button>
-
-      <Routes>
-        <Route path="/" element={<ProductList />} />
-        <Route path="/form" element={<Form />} />
-      </Routes>
+    <div className="App" style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      <h2 style={{ color: 'black' }}>Если ты это видишь, React работает!</h2>
+      <ProductList />
     </div>
   );
 }
