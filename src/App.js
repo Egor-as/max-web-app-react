@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
 import './App.css';
 import { useMax } from './hooks/useMax';
 import ProductList from './components/ProductList/ProductList';
-import Form from './components/Form/Form';
 
 function App() {
   const { mx, user } = useMax();
@@ -16,12 +14,10 @@ function App() {
     }
   }, [mx, user]);
 
+  // Прямой рендер без роутинга - это точно работает!
   return (
     <div className="App">
-      <Routes>
-        <Route path="/" element={<ProductList />} />
-        <Route path="/form" element={<Form />} />
-      </Routes>
+      <ProductList />
     </div>
   );
 }

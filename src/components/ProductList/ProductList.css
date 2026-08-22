@@ -1,3 +1,9 @@
+/* Отступ снизу, чтобы кнопка не перекрывала последний товар */
+.list {
+    padding-bottom: 80px;
+    padding: 16px;
+}
+
 /* Нижняя панель с кнопкой оформления заказа */
 .bottom-action-bar {
     position: fixed;
@@ -27,9 +33,4 @@
 .custom-main-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-}
-
-/* Отступ для списка товаров, чтобы кнопка не перекрывала последний элемент */
-.list {
-    padding-bottom: 80px;
 }

@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import './ProductList.css';
 import ProductItem from '../ProductItem/ProductItem';
 import { useMax } from '../../hooks/useMax';
 
+// Массив товаров (в реальности должен приходить с бэкенда)
 const products = [
-    // ... твой массив товаров
     { 
         id: '1', 
         title: 'Джинсы', 
@@ -21,6 +21,7 @@ const products = [
     },
 ];
 
+// Функция подсчета итоговой суммы корзины
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 };
@@ -30,7 +31,9 @@ const ProductList = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { mx, queryId } = useMax();
 
+    // Умная функция изменения количества товара в корзине
     const updateQuantity = useCallback((product, delta) => {
+        // Виброотклик при изменении количества (работает в Max)
         if (mx?.HapticFeedback) {
             mx.HapticFeedback.impactOccurred('light');
         }
@@ -39,37 +42,46 @@ const ProductList = () => {
             const existingItem = prevItems.find(item => item.id === product.id);
 
             if (delta > 0) {
+                // Увеличиваем количество или добавляем новый товар
                 if (existingItem) {
                     return prevItems.map(item =>
-                        item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                        item.id === product.id 
+                            ? { ...item, quantity: item.quantity + 1 } 
+                            : item
                     );
                 }
                 return [...prevItems, { ...product, quantity: 1 }];
             } else {
+                // Уменьшаем количество
                 if (existingItem && existingItem.quantity > 1) {
                     return prevItems.map(item =>
-                        item.id === product.id ? { ...item, quantity: item.quantity - 1 } : item
+                        item.id === product.id 
+                            ? { ...item, quantity: item.quantity - 1 } 
+                            : item
                     );
                 }
+                // Если количество было 1 — удаляем товар из корзины
                 return prevItems.filter(item => item.id !== product.id);
             }
         });
     }, [mx]);
 
+    // Функция отправки заказа на бэкенд
     const onSendData = useCallback(async () => {
-        console.log('🔵 Кнопка "Оформить заказ" нажата');
         if (isSubmitting) return;
 
         setIsSubmitting(true);
-        console.log('🔵 Начинаем отправку заказа...');
 
         try {
+            // 🔒 Безопасность: отправляем только ID и количество
+            // Бэкенд сам пересчитает сумму по своей базе данных
             const payload = {
-                items: cartItems.map(item => ({ id: item.id, quantity: item.quantity })),
+                items: cartItems.map(item => ({ 
+                    id: item.id, 
+                    quantity: item.quantity 
+                })),
                 queryId,
             };
-            
-            console.log('🔵 Payload:', payload);
 
             const response = await fetch('https://85.119.146.179:8000/web-data', {
                 method: 'POST',
@@ -77,34 +89,35 @@ const ProductList = () => {
                 body: JSON.stringify(payload)
             });
 
-            console.log('🔵 Ответ сервера, статус:', response.status);
-
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Ошибка сервера:', response.status, errorText);
                 throw new Error(`Ошибка сервера: ${response.status}`);
             }
 
-            console.log('✅ Заказ успешно оформлен!');
+            const result = await response.json();
+            console.log('✅ Заказ успешно оформлен!', result);
+
+            // Очищаем корзину после успешного заказа
             setCartItems([]);
             
+            // Показываем уведомление пользователю
             if (mx?.showAlert) {
-                mx.showAlert({ message: 'Заказ успешно оформлен!' });
+                mx.showAlert({ message: 'Заказ успешно оформлен! Спасибо за покупку 🎉' });
             } else {
-                alert('Заказ успешно оформлен!');
+                alert('Заказ успешно оформлен! Спасибо за покупку 🎉');
             }
             
+            // Закрываем мини-приложение
             if (mx?.close) mx.close();
 
         } catch (error) {
-            console.error('❌ Критическая ошибка при отправке:', error);
+            console.error('❌ Ошибка при отправке заказа:', error);
+            
             if (mx?.showAlert) {
-                mx.showAlert({ message: `Ошибка: ${error.message}` });
+                mx.showAlert({ message: 'Не удалось оформить заказ. Попробуйте позже.' });
             } else {
                 alert(`Не удалось оформить заказ: ${error.message}`);
             }
         } finally {
-            console.log('🔵 Сбрасываем isSubmitting');
             setIsSubmitting(false);
         }
     }, [cartItems, isSubmitting, mx, queryId]);
@@ -115,6 +128,7 @@ const ProductList = () => {
     return (
         <div className="list">
             {products.map(item => {
+                // Находим товар в корзине, чтобы передать его текущее количество
                 const cartItem = cartItems.find(ci => ci.id === item.id);
                 const quantity = cartItem ? cartItem.quantity : 0;
 
@@ -129,6 +143,7 @@ const ProductList = () => {
                 );
             })}
 
+            {/* Кастомная нижняя кнопка (заменяет MainButton из Telegram) */}
             {!isCartEmpty && (
                 <div className="bottom-action-bar">
                     <button 
@@ -136,7 +151,10 @@ const ProductList = () => {
                         onClick={onSendData}
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Оформление...' : `Оформить заказ на ${total.toLocaleString('ru-RU')} ₽`}
+                        {isSubmitting 
+                            ? 'Оформление...' 
+                            : `Оформить заказ на ${total.toLocaleString('ru-RU')} ₽`
+                        }
                     </button>
                 </div>
             )}
@@ -144,5 +162,4 @@ const ProductList = () => {
     );
 };
 
-// ЭТА СТРОКА ОБЯЗАТЕЛЬНА! Она должна быть в самом низу файла.
 export default ProductList;

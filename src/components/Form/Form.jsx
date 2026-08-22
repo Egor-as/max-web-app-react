@@ -103,6 +103,7 @@ const Form = () => {
             >
                 {isSubmitting ? 'Отправка...' : 'Отправить данные'}
             </button>
+            <button onClick={onBack}>← Назад к товарам</button>
         </div>
     );
 };
