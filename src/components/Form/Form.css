@@ -32,6 +32,7 @@
     text-align: left;
     margin-bottom: 10px;
     transition: opacity 0.2s;
+    font-family: inherit;
 }
 
 .back-button:hover {
@@ -49,7 +50,6 @@
     background-color: #ffffff;
     border-radius: 12px;
     padding: 16px;
-    margin-bottom: 10px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -60,9 +60,6 @@
     color: #1c1c1e;
 }
 
-/* ==============================
-   ТОВАР В СВОДКЕ ЗАКАЗА
-   ============================== */
 .order-item {
     display: flex;
     justify-content: space-between;
@@ -78,7 +75,7 @@
 
 .order-item-info {
     flex: 1;
-    min-width: 0; /* Важно для корректного переноса текста */
+    min-width: 0;
 }
 
 .order-item-title {
@@ -98,9 +95,6 @@
     color: #1c1c1e;
 }
 
-/* ==============================
-   СЧЕТЧИК КОЛИЧЕСТВА
-   ============================== */
 .quantity-control {
     display: flex;
     align-items: center;
@@ -125,12 +119,12 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    transition: transform 0.1s, background-color 0.2s;
+    transition: transform 0.1s;
+    font-family: inherit;
 }
 
 .qty-btn:active:not(:disabled) {
     transform: scale(0.95);
-    background-color: #f0f0f0;
 }
 
 .qty-btn:disabled {
@@ -146,9 +140,6 @@
     text-align: center;
 }
 
-/* ==============================
-   ИТОГОВАЯ СУММА
-   ============================== */
 .order-total {
     margin-top: 12px;
     padding-top: 12px;
@@ -159,7 +150,74 @@
 }
 
 /* ==============================
-   ГРУППЫ ПОЛЕЙ ФОРМЫ
+   ВЫБОР СПОСОБА ОПЛАТЫ
+   ============================== */
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.payment-title {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1c1c1e;
+}
+
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background-color: #ffffff;
+    border: 2px solid #e5e5ea;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.payment-option:hover {
+    border-color: #c7c7cc;
+}
+
+.payment-option.active {
+    border-color: #007aff;
+    background-color: #f0f7ff;
+}
+
+.payment-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #007aff;
+    cursor: pointer;
+    margin: 0;
+}
+
+.payment-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.payment-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.payment-text strong {
+    font-size: 15px;
+    color: #1c1c1e;
+}
+
+.payment-text small {
+    font-size: 13px;
+    color: #636366;
+}
+
+/* ==============================
+   ПОЛЯ ФОРМЫ
    ============================== */
 .form-group {
     display: flex;
@@ -174,9 +232,6 @@
     margin-left: 4px;
 }
 
-/* ==============================
-   ПОЛЯ ВВОДА И СЕЛЕКТ
-   ============================== */
 .form-input,
 .form-select {
     width: 100%;
@@ -210,7 +265,7 @@
 }
 
 /* ==============================
-   КНОПКА ОТПРАВКИ ЗАКАЗА
+   КНОПКА ОТПРАВКИ
    ============================== */
 .submit-button {
     width: 100%;
@@ -239,4 +294,128 @@
     opacity: 0.5;
     cursor: not-allowed;
     background-color: #8e8e93;
+}
+
+/* ==============================
+   ЭКРАН ОБРАБОТКИ ПЛАТЕЖА
+   ============================== */
+.processing-screen {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.processing-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #e5e5ea;
+    border-top-color: #007aff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.processing-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1c1c1e;
+    margin: 0 0 8px 0;
+}
+
+.processing-subtitle {
+    font-size: 15px;
+    color: #636366;
+    margin: 0;
+}
+
+/* ==============================
+   ЭКРАН УСПЕШНОЙ ОПЛАТЫ
+   ============================== */
+.success-screen {
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+    padding-top: 40px;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background-color: #34c759;
+    color: #ffffff;
+    font-size: 48px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    animation: scaleIn 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.success-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1c1c1e;
+    margin: 0 0 8px 0;
+}
+
+.success-subtitle {
+    font-size: 16px;
+    color: #636366;
+    margin: 0 0 24px 0;
+}
+
+.order-details-card {
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    text-align: left;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.order-detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f2f2f7;
+    gap: 12px;
+}
+
+.order-detail-row:last-child {
+    border-bottom: none;
+}
+
+.order-detail-label {
+    font-size: 14px;
+    color: #636366;
+    flex-shrink: 0;
+}
+
+.order-detail-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1c1c1e;
+    text-align: right;
+    word-break: break-word;
+}
+
+.success-note {
+    font-size: 14px;
+    color: #636366;
+    margin: 0 0 20px 0;
+    padding: 0 10px;
+    line-height: 1.5;
 }
