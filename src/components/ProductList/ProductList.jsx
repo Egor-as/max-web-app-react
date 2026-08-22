@@ -3,7 +3,6 @@ import './ProductList.css';
 import ProductItem from '../ProductItem/ProductItem';
 import { useMax } from '../../hooks/useMax';
 
-// Массив товаров (в реальности должен приходить с бэкенда)
 const products = [
     { 
         id: '1', 
@@ -21,19 +20,17 @@ const products = [
     },
 ];
 
-// Функция подсчета итоговой суммы корзины
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 };
 
-const ProductList = () => {
+// Добавляем пропс onNavigateToForm
+const ProductList = ({ onNavigateToForm }) => {
     const [cartItems, setCartItems] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { mx, queryId } = useMax();
 
-    // Умная функция изменения количества товара в корзине
     const updateQuantity = useCallback((product, delta) => {
-        // Виброотклик при изменении количества (работает в Max)
         if (mx?.HapticFeedback) {
             mx.HapticFeedback.impactOccurred('light');
         }
@@ -42,7 +39,6 @@ const ProductList = () => {
             const existingItem = prevItems.find(item => item.id === product.id);
 
             if (delta > 0) {
-                // Увеличиваем количество или добавляем новый товар
                 if (existingItem) {
                     return prevItems.map(item =>
                         item.id === product.id 
@@ -52,7 +48,6 @@ const ProductList = () => {
                 }
                 return [...prevItems, { ...product, quantity: 1 }];
             } else {
-                // Уменьшаем количество
                 if (existingItem && existingItem.quantity > 1) {
                     return prevItems.map(item =>
                         item.id === product.id 
@@ -60,21 +55,17 @@ const ProductList = () => {
                             : item
                     );
                 }
-                // Если количество было 1 — удаляем товар из корзины
                 return prevItems.filter(item => item.id !== product.id);
             }
         });
     }, [mx]);
 
-    // Функция отправки заказа на бэкенд
     const onSendData = useCallback(async () => {
         if (isSubmitting) return;
 
         setIsSubmitting(true);
 
         try {
-            // 🔒 Безопасность: отправляем только ID и количество
-            // Бэкенд сам пересчитает сумму по своей базе данных
             const payload = {
                 items: cartItems.map(item => ({ 
                     id: item.id, 
@@ -96,17 +87,14 @@ const ProductList = () => {
             const result = await response.json();
             console.log('✅ Заказ успешно оформлен!', result);
 
-            // Очищаем корзину после успешного заказа
             setCartItems([]);
             
-            // Показываем уведомление пользователю
             if (mx?.showAlert) {
                 mx.showAlert({ message: 'Заказ успешно оформлен! Спасибо за покупку 🎉' });
             } else {
                 alert('Заказ успешно оформлен! Спасибо за покупку 🎉');
             }
             
-            // Закрываем мини-приложение
             if (mx?.close) mx.close();
 
         } catch (error) {
@@ -127,8 +115,9 @@ const ProductList = () => {
 
     return (
         <div className="list">
+            <h2 style={{ marginBottom: '20px' }}>Наши товары</h2>
+            
             {products.map(item => {
-                // Находим товар в корзине, чтобы передать его текущее количество
                 const cartItem = cartItems.find(ci => ci.id === item.id);
                 const quantity = cartItem ? cartItem.quantity : 0;
 
@@ -143,9 +132,18 @@ const ProductList = () => {
                 );
             })}
 
-            {/* Кастомная нижняя кнопка (заменяет MainButton из Telegram) */}
             {!isCartEmpty && (
                 <div className="bottom-action-bar">
+                    {/* Кнопка перехода к форме */}
+                    <button 
+                        className="form-button"
+                        onClick={onNavigateToForm}
+                        disabled={isSubmitting}
+                    >
+                        Оформить доставку →
+                    </button>
+                    
+                    {/* Кнопка отправки заказа */}
                     <button 
                         className="custom-main-button"
                         onClick={onSendData}

@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import { useMax } from './hooks/useMax';
 import ProductList from './components/ProductList/ProductList';
+import Form from './components/Form/Form';
 
 function App() {
   const { mx, user } = useMax();
+  const [currentScreen, setCurrentScreen] = useState('products'); // 'products' или 'form'
 
   useEffect(() => {
     if (mx) {
@@ -14,10 +16,14 @@ function App() {
     }
   }, [mx, user]);
 
-  // Прямой рендер без роутинга - это точно работает!
   return (
     <div className="App">
-      <ProductList />
+      {currentScreen === 'products' && (
+        <ProductList onNavigateToForm={() => setCurrentScreen('form')} />
+      )}
+      {currentScreen === 'form' && (
+        <Form onBack={() => setCurrentScreen('products')} />
+      )}
     </div>
   );
 }
