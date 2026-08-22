@@ -6,23 +6,44 @@ import Form from './components/Form/Form';
 
 function App() {
   const { mx, user } = useMax();
-  const [currentScreen, setCurrentScreen] = useState('products'); // 'products' или 'form'
+  const [currentScreen, setCurrentScreen] = useState('products');
+  
+  // 🔥 Корзина теперь здесь — доступна обоим экранам
+  const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
     if (mx) {
       mx.ready();
       if (mx.expand) mx.expand();
-      console.log('✅ Max инициализирован. Пользователь:', user);
     }
   }, [mx, user]);
+
+  // Функция перехода к форме (сохраняет текущую корзину)
+  const handleNavigateToForm = () => {
+    setCurrentScreen('form');
+  };
+
+  // Функция возврата к товарам
+  const handleBackToProducts = () => {
+    setCurrentScreen('products');
+  };
 
   return (
     <div className="App">
       {currentScreen === 'products' && (
-        <ProductList onNavigateToForm={() => setCurrentScreen('form')} />
+        <ProductList 
+          cartItems={cartItems}
+          setCartItems={setCartItems}
+          onNavigateToForm={handleNavigateToForm}
+        />
       )}
+      
       {currentScreen === 'form' && (
-        <Form onBack={() => setCurrentScreen('products')} />
+        <Form 
+          cartItems={cartItems}
+          setCartItems={setCartItems}
+          onBack={handleBackToProducts}
+        />
       )}
     </div>
   );
