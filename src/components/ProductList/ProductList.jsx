@@ -3,6 +3,7 @@ import './ProductList.css';
 import ProductItem from '../ProductItem/ProductItem';
 import { useMax } from '../../hooks/useMax';
 
+// Массив товаров
 const products = [
     { 
         id: '1', 
@@ -13,21 +14,23 @@ const products = [
     },
     { 
         id: '2', 
-        title: 'Жакет', 
+        title: 'Куртка', 
         price: 12000, 
-        description: 'Вишнёвого цвета, теплая', 
+        description: 'Зеленого цвета, теплая', 
         image: '/images/jacket.jpg' 
     },
 ];
 
+// Функция подсчета итоговой суммы
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 };
 
-// Получаем cartItems и setCartItems через пропсы от App
-const ProductList = ({ cartItems, setCartItems, onNavigateToForm }) => {
+// Компонент принимает все необходимые пропсы от App.js
+const ProductList = ({ cartItems, setCartItems, onNavigateToForm, onNavigateToMain }) => {
     const { mx } = useMax();
 
+    // Логика изменения количества товара
     const updateQuantity = useCallback((product, delta) => {
         if (mx?.HapticFeedback) {
             mx.HapticFeedback.impactOccurred('light');
@@ -37,6 +40,7 @@ const ProductList = ({ cartItems, setCartItems, onNavigateToForm }) => {
             const existingItem = prevItems.find(item => item.id === product.id);
 
             if (delta > 0) {
+                // Увеличиваем количество или добавляем новый товар
                 if (existingItem) {
                     return prevItems.map(item =>
                         item.id === product.id 
@@ -46,6 +50,7 @@ const ProductList = ({ cartItems, setCartItems, onNavigateToForm }) => {
                 }
                 return [...prevItems, { ...product, quantity: 1 }];
             } else {
+                // Уменьшаем количество
                 if (existingItem && existingItem.quantity > 1) {
                     return prevItems.map(item =>
                         item.id === product.id 
@@ -53,6 +58,7 @@ const ProductList = ({ cartItems, setCartItems, onNavigateToForm }) => {
                             : item
                     );
                 }
+                // Если количество было 1 — удаляем товар из корзины
                 return prevItems.filter(item => item.id !== product.id);
             }
         });
@@ -63,7 +69,16 @@ const ProductList = ({ cartItems, setCartItems, onNavigateToForm }) => {
 
     return (
         <div className="list">
-            <h2 style={{ marginBottom: '20px', paddingLeft: '16px' }}>Наши товары</h2>
+            {/* Кнопка возврата в главное меню */}
+            <button 
+                className="back-button" 
+                onClick={onNavigateToMain} 
+                style={{ marginBottom: '10px', marginLeft: '16px' }}
+            >
+                ← В главное меню
+            </button>
+
+            <h2 style={{ marginBottom: '20px', paddingLeft: '16px' }}>Каталог оборудования</h2>
             
             {products.map(item => {
                 const cartItem = cartItems.find(ci => ci.id === item.id);
@@ -80,7 +95,7 @@ const ProductList = ({ cartItems, setCartItems, onNavigateToForm }) => {
                 );
             })}
 
-            {/* 🔥 ОДНА КНОПКА: "Оформить заказ" сразу открывает форму */}
+            {/* Кнопка перехода к оформлению заказа (появляется только если корзина не пуста) */}
             {!isCartEmpty && (
                 <div className="bottom-action-bar">
                     <button 

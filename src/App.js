@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import { useMax } from './hooks/useMax';
+
+// Импортируем все экраны
+import MainMenu from './components/MainMenu/MainMenu';
 import ProductList from './components/ProductList/ProductList';
 import Form from './components/Form/Form';
+import Specialist from './components/Specialist/Specialist';
 
 function App() {
   const { mx, user } = useMax();
-  const [currentScreen, setCurrentScreen] = useState('products');
   
-  // 🔥 Корзина теперь здесь — доступна обоим экранам
+  // 🔥 Начинаем с главного меню ('main')
+  const [currentScreen, setCurrentScreen] = useState('main');
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
@@ -18,32 +22,35 @@ function App() {
     }
   }, [mx, user]);
 
-  // Функция перехода к форме (сохраняет текущую корзину)
-  const handleNavigateToForm = () => {
-    setCurrentScreen('form');
-  };
-
-  // Функция возврата к товарам
-  const handleBackToProducts = () => {
-    setCurrentScreen('products');
-  };
-
   return (
     <div className="App">
+      {/* Экран 1: Главное меню */}
+      {currentScreen === 'main' && (
+        <MainMenu onNavigate={setCurrentScreen} />
+      )}
+      
+      {/* Экран 2: Список товаров */}
       {currentScreen === 'products' && (
         <ProductList 
           cartItems={cartItems}
           setCartItems={setCartItems}
-          onNavigateToForm={handleNavigateToForm}
+          onNavigateToForm={() => setCurrentScreen('form')}
+          onNavigateToMain={() => setCurrentScreen('main')}
         />
       )}
       
+      {/* Экран 3: Оформление заказа */}
       {currentScreen === 'form' && (
         <Form 
           cartItems={cartItems}
           setCartItems={setCartItems}
-          onBack={handleBackToProducts}
+          onBack={() => setCurrentScreen('products')}
         />
+      )}
+
+      {/* Экран 4: Вызов специалиста */}
+      {currentScreen === 'specialist' && (
+        <Specialist onBack={() => setCurrentScreen('main')} />
       )}
     </div>
   );
