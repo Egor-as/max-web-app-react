@@ -1,57 +1,29 @@
 // src/hooks/useMax.js
+// Финальная стабильная версия
+
 const mx = window.WebApp || {
-    ready: () => console.warn('Mock: ready()'),
-    expand: () => console.warn('Mock: expand()'),
-    close: () => {
-        console.warn('Mock: close() called');
-        window.close();
-    },
-    MainButton: {
-        show: () => {},
-        hide: () => {},
-        isVisible: false,
-        setParams: () => {},
-        setText: () => {},
-        onClick: () => {},
-        offClick: () => {},
-        showProgress: () => {},
-        hideProgress: () => {}
-    },
-    HapticFeedback: {
-        impactOccurred: () => {},
-        notificationOccurred: () => {}
-    },
+    ready: () => {},
+    expand: () => {},
+    close: () => { window.close(); },
+    MainButton: { show: () => {}, hide: () => {}, isVisible: false, setParams: () => {}, onClick: () => {}, offClick: () => {} },
+    HapticFeedback: { impactOccurred: () => {}, notificationOccurred: () => {} },
     initDataUnsafe: {},
     showAlert: (params) => alert(params.message || 'Alert')
 };
 
-const hasMainButton = !!window.WebApp?.MainButton;
-
 export function useMax() {
+    const user = mx.initDataUnsafe?.user || null;
+    const queryId = mx.initDataUnsafe?.query_id || null;
+    
     const onClose = () => {
-        if (mx?.close) {
-            mx.close();
-        }
-    };
-
-    const onToggleButton = () => {
-        if (mx?.MainButton) {
-            if (mx.MainButton.isVisible) {
-                mx.MainButton.hide();
-            } else {
-                mx.MainButton.show();
-            }
-        }
+        if (mx?.close) mx.close();
     };
 
     return {
         onClose,
-        onToggleButton,
         mx,
-        hasMainButton,
-        user: mx.initDataUnsafe?.user || null,
-        queryId: mx.initDataUnsafe?.query_id || null,
-        chat: mx.initDataUnsafe?.chat || null,
-        startParam: mx.initDataUnsafe?.start_param || null,
+        user,       // Будет null, если Max не передал данные (и это нормально)
+        queryId,    // Будет null, если Max не передал данные
+        isInsideMax: !!window.WebApp,
     };
 }

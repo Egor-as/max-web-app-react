@@ -16,15 +16,12 @@ function App() {
     if (mx) {
       mx.ready();
       if (mx.expand) mx.expand();
-      console.log('✅ Max инициализирован. Пользователь:', user);
     }
-  }, [mx, user]);
+  }, [mx]);
 
   return (
     <div className="App">
-      {currentScreen === 'main' && (
-        <MainMenu onNavigate={setCurrentScreen} />
-      )}
+      {currentScreen === 'main' && <MainMenu onNavigate={setCurrentScreen} />}
       
       {currentScreen === 'products' && (
         <ProductList 
