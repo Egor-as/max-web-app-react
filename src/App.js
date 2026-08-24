@@ -2,32 +2,25 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { useMax } from './hooks/useMax';
 
-// Импортируем все экраны
-import LoginViaMax from './components/Auth/LoginViaMax';
+// Импортируем все экраны (без LoginViaMax)
 import MainMenu from './components/MainMenu/MainMenu';
 import ProductList from './components/ProductList/ProductList';
 import Form from './components/Form/Form';
 import Specialist from './components/Specialist/Specialist';
 
 function App() {
-  const { mx, user, isInsideMax } = useMax();
-  
+  const { mx, user } = useMax();
   const [currentScreen, setCurrentScreen] = useState('main');
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
-    if (mx && isInsideMax) {
+    if (mx) {
       mx.ready();
       if (mx.expand) mx.expand();
+      console.log('✅ Max инициализирован. Пользователь:', user);
     }
-  }, [mx, isInsideMax]);
+  }, [mx, user]);
 
-  // 🔥 ГЛАВНАЯ ПРОВЕРКА: Если мы не внутри Max, показываем экран входа
-  if (!isInsideMax) {
-    return <LoginViaMax />;
-  }
-
-  // Если мы внутри Max, показываем основное приложение
   return (
     <div className="App">
       {currentScreen === 'main' && (
