@@ -2,17 +2,13 @@ import React, { useState, useCallback } from 'react';
 import './Form.css';
 import { useMax } from '../../hooks/useMax';
 
+// Функция подсчета итоговой суммы
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 };
 
-// Генерация случайного номера заказа
-const generateOrderNumber = () => {
-    return 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-};
-
 const Form = ({ cartItems, setCartItems, onBack }) => {
-    // 🔥 Состояние шагов: 'form' → 'payment' → 'processing' → 'success'
+    // Состояние шагов: 'form' → 'payment' → 'processing' → 'success'
     const [step, setStep] = useState('form');
     
     // Данные доставки
@@ -20,17 +16,18 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     const [street, setStreet] = useState('');
     const [subject, setSubject] = useState('physical');
     
-    // Данные оплаты
-    const [paymentMethod, setPaymentMethod] = useState('card'); // card | sbp | cash
+    // Данные оплаты и заказа
+    const [paymentMethod, setPaymentMethod] = useState('card');
     const [orderNumber, setOrderNumber] = useState('');
+    const [totalPaid, setTotalPaid] = useState(0);
     
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { mx, queryId } = useMax();
+    const { mx, queryId, user } = useMax();
 
     const isFormValid = country.trim().length > 0 && street.trim().length > 0;
     const total = getTotalPrice(cartItems);
 
-    // Изменение количества товара
+    // Изменение количества товара прямо в форме
     const updateQuantity = useCallback((product, delta) => {
         if (mx?.HapticFeedback) {
             mx.HapticFeedback.impactOccurred('light');
@@ -58,14 +55,14 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         });
     }, [mx, setCartItems]);
 
-    // 🔥 Шаг 1 → Шаг 2: Переход к выбору оплаты
+    // Шаг 1 → Шаг 2: Переход к выбору оплаты
     const handleProceedToPayment = () => {
         if (!isFormValid) return;
         if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('medium');
         setStep('payment');
     };
 
-    // 🔥 Шаг 2 → Шаг 3 → Шаг 4: Обработка оплаты
+    // Шаг 2 → Шаг 3 → Шаг 4: Обработка оплаты
     const handlePay = useCallback(async () => {
         if (isSubmitting || cartItems.length === 0) return;
 
@@ -75,6 +72,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('heavy');
 
         try {
+            // 🔥 Формируем полный заказ с userId для сохранения в БД
             const payload = {
                 items: cartItems.map(item => ({ 
                     id: item.id, 
@@ -90,25 +88,29 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     amount: total
                 },
                 queryId,
+                // 🔥 ID пользователя из Max (для связи с БД)
+                userId: user?.id || null,
             };
 
             console.log('📤 Отправка заказа на сервер:', payload);
 
-            // ============================================
-            // ⚠️ ВНИМАНИЕ: Это ИМИТАЦИЯ оплаты для демо
-            // В реальном проекте здесь должен быть запрос
-            // к вашему серверу, который создаст платёж
-            // через ЮKassa / Tinkoff / CloudPayments и т.д.
-            // ============================================
-            
-            // Имитация задержки обработки платежа (2 секунды)
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const response = await fetch('https://85.119.146.179:8000/web-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-            // Имитация успешной оплаты (в реальности — ответ от сервера)
-            const newOrderNumber = generateOrderNumber();
-            setOrderNumber(newOrderNumber);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
+            }
 
-            console.log('✅ Оплата прошла успешно! Номер заказа:', newOrderNumber);
+            const result = await response.json();
+            console.log('✅ Заказ успешно оформлен!', result);
+
+            // Сохраняем номер заказа из ответа сервера
+            setOrderNumber(result.orderNumber || 'ORD-UNKNOWN');
+            setTotalPaid(result.totalPrice || total);
 
             // Очищаем корзину
             setCartItems([]);
@@ -134,9 +136,9 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [cartItems, country, street, subject, paymentMethod, total, isSubmitting, mx, queryId, setCartItems]);
+    }, [cartItems, country, street, subject, paymentMethod, total, isSubmitting, mx, queryId, user, setCartItems]);
 
-    // 🔥 Закрытие приложения после успеха
+    // Закрытие приложения после успеха
     const handleClose = () => {
         if (mx?.close) {
             mx.close();
@@ -145,7 +147,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         }
     };
 
-    // Если корзина пуста
+    // Если корзина пуста (не на экране успеха)
     if (cartItems.length === 0 && step !== 'success') {
         return (
             <div className="form-container">
@@ -178,7 +180,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     </div>
                     <div className="order-detail-row">
                         <span className="order-detail-label">Сумма:</span>
-                        <span className="order-detail-value">{total.toLocaleString('ru-RU')} ₽</span>
+                        <span className="order-detail-value">{totalPaid.toLocaleString('ru-RU')} ₽</span>
                     </div>
                     <div className="order-detail-row">
                         <span className="order-detail-label">Способ оплаты:</span>
@@ -249,6 +251,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                                     className="qty-btn" 
                                     onClick={() => updateQuantity(item, -1)}
                                     disabled={isSubmitting}
+                                    aria-label="Уменьшить количество"
                                 >
                                     −
                                 </button>
@@ -257,6 +260,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                                     className="qty-btn" 
                                     onClick={() => updateQuantity(item, 1)}
                                     disabled={isSubmitting}
+                                    aria-label="Увеличить количество"
                                 >
                                     +
                                 </button>
@@ -331,7 +335,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     }
 
     // ============================================
-    // ЭКРАН 1: ФОРМА ДОСТАВКИ
+    // ЭКРАН 1: ФОРМА ДОСТАВКИ (дефолтный)
     // ============================================
     return (
         <div className="form-container">
