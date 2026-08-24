@@ -3,33 +3,37 @@ import './App.css';
 import { useMax } from './hooks/useMax';
 
 // Импортируем все экраны
+import LoginViaMax from './components/Auth/LoginViaMax';
 import MainMenu from './components/MainMenu/MainMenu';
 import ProductList from './components/ProductList/ProductList';
 import Form from './components/Form/Form';
 import Specialist from './components/Specialist/Specialist';
 
 function App() {
-  const { mx, user } = useMax();
+  const { mx, user, isInsideMax } = useMax();
   
-  // 🔥 Начинаем с главного меню ('main')
   const [currentScreen, setCurrentScreen] = useState('main');
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
-    if (mx) {
+    if (mx && isInsideMax) {
       mx.ready();
       if (mx.expand) mx.expand();
     }
-  }, [mx, user]);
+  }, [mx, isInsideMax]);
 
+  // 🔥 ГЛАВНАЯ ПРОВЕРКА: Если мы не внутри Max, показываем экран входа
+  if (!isInsideMax) {
+    return <LoginViaMax />;
+  }
+
+  // Если мы внутри Max, показываем основное приложение
   return (
     <div className="App">
-      {/* Экран 1: Главное меню */}
       {currentScreen === 'main' && (
         <MainMenu onNavigate={setCurrentScreen} />
       )}
       
-      {/* Экран 2: Список товаров */}
       {currentScreen === 'products' && (
         <ProductList 
           cartItems={cartItems}
@@ -39,7 +43,6 @@ function App() {
         />
       )}
       
-      {/* Экран 3: Оформление заказа */}
       {currentScreen === 'form' && (
         <Form 
           cartItems={cartItems}
@@ -48,7 +51,6 @@ function App() {
         />
       )}
 
-      {/* Экран 4: Вызов специалиста */}
       {currentScreen === 'specialist' && (
         <Specialist onBack={() => setCurrentScreen('main')} />
       )}

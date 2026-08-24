@@ -16,7 +16,7 @@ const products = [
         id: '2', 
         title: 'Куртка', 
         price: 12000, 
-        description: 'Зеленого цвета, теплая', 
+        description: 'Бордового цвета', 
         image: '/images/jacket.jpg' 
     },
 ];
