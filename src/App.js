@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { useMax } from './hooks/useMax';
 
-// Импортируем все экраны (без LoginViaMax)
 import MainMenu from './components/MainMenu/MainMenu';
 import ProductList from './components/ProductList/ProductList';
 import Form from './components/Form/Form';
