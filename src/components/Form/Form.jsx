@@ -2,13 +2,6 @@ import React, { useState, useCallback } from 'react';
 import './Form.css';
 import { useMax } from '../../hooks/useMax';
 
-// 🔥 НАСТРОЙКА API: 
-// Для локального тестирования (когда бот запущен у вас на компьютере):
-const API_URL = 'http://localhost:8000/web-data';
-
-// Для продакшена (когда бот работает на удаленном сервере), замените на:
-// const API_URL = 'https://85.119.146.179:8000/web-data';
-
 // Функция подсчета итоговой суммы
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -79,46 +72,33 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('heavy');
 
         try {
-            // 🔥 Формируем полный заказ с userId для сохранения в БД
+            // Формируем данные заказа (для логов)
             const payload = {
-                items: cartItems.map(item => ({ 
-                    id: item.id, 
-                    quantity: item.quantity 
-                })),
-                delivery: {
-                    country: country.trim(),
-                    street: street.trim(),
-                    subject: subject
-                },
-                payment: {
-                    method: paymentMethod,
-                    amount: total
-                },
+                items: cartItems.map(item => ({ id: item.id, quantity: item.quantity })),
+                delivery: { country: country.trim(), street: street.trim(), subject: subject },
+                payment: { method: paymentMethod, amount: total },
                 queryId,
-                // 🔥 ID пользователя из Max (для связи с БД, будет null если не передан)
                 userId: user?.id || null,
             };
 
-            console.log('📤 Отправка заказа на сервер:', payload);
-            console.log('🌐 URL запроса:', API_URL);
+            console.log('📦 [ДАННЫЕ ЗАКАЗА]:', payload);
 
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            // 🔥 ИМИТАЦИЯ ОТПРАВКИ НА СЕРВЕР 🔥
+            // Вместо реального fetch мы просто ждем 2 секунды, имитируя работу сети
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
-            }
+            // Имитируем успешный ответ от сервера
+            const mockResponse = {
+                status: 'success',
+                orderNumber: 'ORD-' + Math.floor(100000 + Math.random() * 900000), // Случайный номер
+                totalPrice: total
+            };
 
-            const result = await response.json();
-            console.log('✅ Заказ успешно оформлен!', result);
+            console.log('✅ [ИМИТАЦИЯ] Заказ успешно оформлен!', mockResponse);
 
-            // Сохраняем номер заказа из ответа сервера
-            setOrderNumber(result.orderNumber || 'ORD-UNKNOWN');
-            setTotalPaid(result.totalPrice || total);
+            // Сохраняем данные из "ответа сервера"
+            setOrderNumber(mockResponse.orderNumber);
+            setTotalPaid(mockResponse.totalPrice);
 
             // Очищаем корзину
             setCartItems([]);
@@ -132,14 +112,11 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
 
         } catch (error) {
             console.error('❌ Ошибка при оплате:', error);
-            
             if (mx?.showAlert) {
                 mx.showAlert({ message: `Не удалось провести оплату: ${error.message}` });
             } else {
-                alert(`Не удалось провести оплату: ${error.message}\n\nПроверьте, запущен ли сервер бота (npm start).`);
+                alert(`Не удалось провести оплату: ${error.message}`);
             }
-            
-            // Возвращаемся к выбору оплаты
             setStep('payment');
         } finally {
             setIsSubmitting(false);
@@ -242,7 +219,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
 
                 <h2 className="form-title">Способ оплаты</h2>
 
-                {/* Сводка заказа */}
                 <div className="order-summary">
                     <h3>Ваш заказ:</h3>
                     {cartItems.map(item => (
@@ -255,23 +231,9 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                                 </div>
                             </div>
                             <div className="quantity-control">
-                                <button 
-                                    className="qty-btn" 
-                                    onClick={() => updateQuantity(item, -1)}
-                                    disabled={isSubmitting}
-                                    aria-label="Уменьшить количество"
-                                >
-                                    −
-                                </button>
+                                <button className="qty-btn" onClick={() => updateQuantity(item, -1)} disabled={isSubmitting}>−</button>
                                 <span className="qty-value">{item.quantity}</span>
-                                <button 
-                                    className="qty-btn" 
-                                    onClick={() => updateQuantity(item, 1)}
-                                    disabled={isSubmitting}
-                                    aria-label="Увеличить количество"
-                                >
-                                    +
-                                </button>
+                                <button className="qty-btn" onClick={() => updateQuantity(item, 1)} disabled={isSubmitting}>+</button>
                             </div>
                         </div>
                     ))}
@@ -280,62 +242,29 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     </div>
                 </div>
 
-                {/* Выбор способа оплаты */}
                 <div className="payment-methods">
                     <h3 className="payment-title">Выберите способ оплаты:</h3>
                     
                     <label className={`payment-option ${paymentMethod === 'card' ? 'active' : ''}`}>
-                        <input 
-                            type="radio" 
-                            name="payment" 
-                            value="card"
-                            checked={paymentMethod === 'card'}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                        />
+                        <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={(e) => setPaymentMethod(e.target.value)} />
                         <span className="payment-icon">💳</span>
-                        <span className="payment-text">
-                            <strong>Банковская карта</strong>
-                            <small>Visa, Mastercard, МИР</small>
-                        </span>
+                        <span className="payment-text"><strong>Банковская карта</strong><small>Visa, Mastercard, МИР</small></span>
                     </label>
 
                     <label className={`payment-option ${paymentMethod === 'sbp' ? 'active' : ''}`}>
-                        <input 
-                            type="radio" 
-                            name="payment" 
-                            value="sbp"
-                            checked={paymentMethod === 'sbp'}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                        />
+                        <input type="radio" name="payment" value="sbp" checked={paymentMethod === 'sbp'} onChange={(e) => setPaymentMethod(e.target.value)} />
                         <span className="payment-icon">⚡</span>
-                        <span className="payment-text">
-                            <strong>СБП</strong>
-                            <small>Система быстрых платежей</small>
-                        </span>
+                        <span className="payment-text"><strong>СБП</strong><small>Система быстрых платежей</small></span>
                     </label>
 
                     <label className={`payment-option ${paymentMethod === 'cash' ? 'active' : ''}`}>
-                        <input 
-                            type="radio" 
-                            name="payment" 
-                            value="cash"
-                            checked={paymentMethod === 'cash'}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                        />
+                        <input type="radio" name="payment" value="cash" checked={paymentMethod === 'cash'} onChange={(e) => setPaymentMethod(e.target.value)} />
                         <span className="payment-icon">💵</span>
-                        <span className="payment-text">
-                            <strong>При получении</strong>
-                            <small>Наличными или картой курьеру</small>
-                        </span>
+                        <span className="payment-text"><strong>При получении</strong><small>Наличными или картой курьеру</small></span>
                     </label>
                 </div>
 
-                <button
-                    className="submit-button"
-                    onClick={handlePay}
-                    disabled={isSubmitting || cartItems.length === 0}
-                    type="button"
-                >
+                <button className="submit-button" onClick={handlePay} disabled={isSubmitting || cartItems.length === 0} type="button">
                     Оплатить {total.toLocaleString('ru-RU')} ₽
                 </button>
             </div>
@@ -357,47 +286,23 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
             
             <div className="form-group">
                 <label className="form-label">Страна / Город</label>
-                <input
-                    className="form-input"
-                    type="text"
-                    placeholder="Например: Москва"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    disabled={isSubmitting}
-                />
+                <input className="form-input" type="text" placeholder="Например: Москва" value={country} onChange={(e) => setCountry(e.target.value)} disabled={isSubmitting} />
             </div>
             
             <div className="form-group">
                 <label className="form-label">Улица, дом, квартира</label>
-                <input
-                    className="form-input"
-                    type="text"
-                    placeholder="Например: ул. Ленина, д. 10, кв. 5"
-                    value={street}
-                    onChange={(e) => setStreet(e.target.value)}
-                    disabled={isSubmitting}
-                />
+                <input className="form-input" type="text" placeholder="Например: ул. Ленина, д. 10, кв. 5" value={street} onChange={(e) => setStreet(e.target.value)} disabled={isSubmitting} />
             </div>
             
             <div className="form-group">
                 <label className="form-label">Тип покупателя</label>
-                <select 
-                    className="form-select"
-                    value={subject} 
-                    onChange={(e) => setSubject(e.target.value)} 
-                    disabled={isSubmitting}
-                >
+                <select className="form-select" value={subject} onChange={(e) => setSubject(e.target.value)} disabled={isSubmitting}>
                     <option value="physical">Физическое лицо</option>
                     <option value="legal">Юридическое лицо</option>
                 </select>
             </div>
 
-            <button
-                className="submit-button"
-                onClick={handleProceedToPayment}
-                disabled={!isFormValid}
-                type="button"
-            >
+            <button className="submit-button" onClick={handleProceedToPayment} disabled={!isFormValid} type="button">
                 Перейти к оплате →
             </button>
         </div>
