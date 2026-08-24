@@ -2,6 +2,13 @@ import React, { useState, useCallback } from 'react';
 import './Form.css';
 import { useMax } from '../../hooks/useMax';
 
+// 🔥 НАСТРОЙКА API: 
+// Для локального тестирования (когда бот запущен у вас на компьютере):
+const API_URL = 'http://localhost:8000/web-data';
+
+// Для продакшена (когда бот работает на удаленном сервере), замените на:
+// const API_URL = 'https://85.119.146.179:8000/web-data';
+
 // Функция подсчета итоговой суммы
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -88,13 +95,14 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     amount: total
                 },
                 queryId,
-                // 🔥 ID пользователя из Max (для связи с БД)
+                // 🔥 ID пользователя из Max (для связи с БД, будет null если не передан)
                 userId: user?.id || null,
             };
 
             console.log('📤 Отправка заказа на сервер:', payload);
+            console.log('🌐 URL запроса:', API_URL);
 
-            const response = await fetch('https://85.119.146.179:8000/web-data', {
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -128,7 +136,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
             if (mx?.showAlert) {
                 mx.showAlert({ message: `Не удалось провести оплату: ${error.message}` });
             } else {
-                alert(`Не удалось провести оплату: ${error.message}`);
+                alert(`Не удалось провести оплату: ${error.message}\n\nПроверьте, запущен ли сервер бота (npm start).`);
             }
             
             // Возвращаемся к выбору оплаты
@@ -170,7 +178,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         return (
             <div className="form-container success-screen">
                 <div className="success-icon">✓</div>
-                <h2 className="success-title">Заказ оплачен!</h2>
+                <h2 className="success-title">Заказ оформлен!</h2>
                 <p className="success-subtitle">Спасибо за покупку 🎉</p>
                 
                 <div className="order-details-card">
@@ -197,7 +205,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 </div>
 
                 <p className="success-note">
-                    Мы отправили подтверждение в чат с ботом. Менеджер свяжется с вами в ближайшее время.
+                    Мы отправили подтверждение. Менеджер свяжется с вами в ближайшее время.
                 </p>
 
                 <button className="submit-button" onClick={handleClose}>
@@ -214,7 +222,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         return (
             <div className="form-container processing-screen">
                 <div className="processing-spinner"></div>
-                <h2 className="processing-title">Обработка платежа...</h2>
+                <h2 className="processing-title">Обработка заказа...</h2>
                 <p className="processing-subtitle">
                     Пожалуйста, не закрывайте приложение
                 </p>
