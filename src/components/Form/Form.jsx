@@ -2,21 +2,32 @@ import React, { useState, useCallback } from 'react';
 import './Form.css';
 import { useMax } from '../../hooks/useMax';
 
-// Функция подсчета итоговой суммы
+// ==========================================
+// 🔥 НАСТРОЙКА АДРЕСА СЕРВЕРА (ВАЖНО!)
+// ==========================================
+// Вариант 1: Если вы тестируете в браузере на ЭТОМ ЖЕ компьютере, где запущен бот:
+//let API_URL = 'http://localhost:8000/web-data';
+
+// Вариант 2: Если вы тестируете с ТЕЛЕФОНА, но телефон и компьютер в одной Wi-Fi сети:
+// 1. Узнайте локальный IP компьютера (в Windows: откройте командную строку, введите `ipconfig`, найдите "IPv4-адрес", например 192.168.1.5)
+// 2. Закомментируйте строку выше и раскомментируйте строку ниже, подставив свой IP:
+ let API_URL = 'http://192.168.8.251:8000/web-data';
+
+// Вариант 3: Если вы используете ngrok для теста с телефона:
+// let API_URL = 'https://ваш-адрес.ngrok-free.app/web-data';
+// ==========================================
+
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 };
 
 const Form = ({ cartItems, setCartItems, onBack }) => {
-    // Состояние шагов: 'form' → 'payment' → 'processing' → 'success'
     const [step, setStep] = useState('form');
     
-    // Данные доставки
     const [country, setCountry] = useState('');
     const [street, setStreet] = useState('');
     const [subject, setSubject] = useState('physical');
     
-    // Данные оплаты и заказа
     const [paymentMethod, setPaymentMethod] = useState('card');
     const [orderNumber, setOrderNumber] = useState('');
     const [totalPaid, setTotalPaid] = useState(0);
@@ -27,7 +38,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     const isFormValid = country.trim().length > 0 && street.trim().length > 0;
     const total = getTotalPrice(cartItems);
 
-    // Изменение количества товара прямо в форме
     const updateQuantity = useCallback((product, delta) => {
         if (mx?.HapticFeedback) {
             mx.HapticFeedback.impactOccurred('light');
@@ -38,16 +48,12 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
 
             if (delta > 0) {
                 return prevItems.map(item =>
-                    item.id === product.id 
-                        ? { ...item, quantity: item.quantity + 1 } 
-                        : item
+                    item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
                 );
             } else {
                 if (existingItem && existingItem.quantity > 1) {
                     return prevItems.map(item =>
-                        item.id === product.id 
-                            ? { ...item, quantity: item.quantity - 1 } 
-                            : item
+                        item.id === product.id ? { ...item, quantity: item.quantity - 1 } : item
                     );
                 }
                 return prevItems.filter(item => item.id !== product.id);
@@ -55,14 +61,13 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         });
     }, [mx, setCartItems]);
 
-    // Шаг 1 → Шаг 2: Переход к выбору оплаты
     const handleProceedToPayment = () => {
         if (!isFormValid) return;
         if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('medium');
         setStep('payment');
     };
 
-    // Шаг 2 → Шаг 3 → Шаг 4: Обработка оплаты
+    // 🔥 РЕАЛЬНАЯ ОТПРАВКА ЗАКАЗА НА СЕРВЕР
     const handlePay = useCallback(async () => {
         if (isSubmitting || cartItems.length === 0) return;
 
@@ -71,51 +76,51 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
 
         if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('heavy');
 
+        const payload = {
+            items: cartItems.map(item => ({ id: item.id, quantity: item.quantity })),
+            delivery: { country: country.trim(), street: street.trim(), subject: subject },
+            payment: { method: paymentMethod, amount: total },
+            queryId,
+            userId: user?.id || null,
+        };
+
+        console.log('📦 Отправка заказа на сервер:', payload);
+        console.log('🌐 URL запроса:', API_URL);
+
         try {
-            // Формируем данные заказа (для логов)
-            const payload = {
-                items: cartItems.map(item => ({ id: item.id, quantity: item.quantity })),
-                delivery: { country: country.trim(), street: street.trim(), subject: subject },
-                payment: { method: paymentMethod, amount: total },
-                queryId,
-                userId: user?.id || null,
-            };
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-            console.log('📦 [ДАННЫЕ ЗАКАЗА]:', payload);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
+            }
 
-            // 🔥 ИМИТАЦИЯ ОТПРАВКИ НА СЕРВЕР 🔥
-            // Вместо реального fetch мы просто ждем 2 секунды, имитируя работу сети
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const result = await response.json();
+            console.log('✅ Заказ успешно оформлен!', result);
 
-            // Имитируем успешный ответ от сервера
-            const mockResponse = {
-                status: 'success',
-                orderNumber: 'ORD-' + Math.floor(100000 + Math.random() * 900000), // Случайный номер
-                totalPrice: total
-            };
-
-            console.log('✅ [ИМИТАЦИЯ] Заказ успешно оформлен!', mockResponse);
-
-            // Сохраняем данные из "ответа сервера"
-            setOrderNumber(mockResponse.orderNumber);
-            setTotalPaid(mockResponse.totalPrice);
-
-            // Очищаем корзину
+            setOrderNumber(result.orderNumber || 'ORD-UNKNOWN');
+            setTotalPaid(result.totalPrice || total);
             setCartItems([]);
-            
-            // Переходим к экрану успеха
             setStep('success');
 
             if (mx?.HapticFeedback) {
                 mx.HapticFeedback.notificationOccurred('success');
             }
-
         } catch (error) {
             console.error('❌ Ошибка при оплате:', error);
+            
+            const errorMsg = error.message.includes('Failed to fetch') 
+                ? 'Не удалось соединиться с сервером. Проверьте, запущен ли бот и правильный ли адрес API_URL.' 
+                : `Ошибка: ${error.message}`;
+
             if (mx?.showAlert) {
-                mx.showAlert({ message: `Не удалось провести оплату: ${error.message}` });
+                mx.showAlert({ message: errorMsg });
             } else {
-                alert(`Не удалось провести оплату: ${error.message}`);
+                alert(errorMsg);
             }
             setStep('payment');
         } finally {
@@ -123,7 +128,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         }
     }, [cartItems, country, street, subject, paymentMethod, total, isSubmitting, mx, queryId, user, setCartItems]);
 
-    // Закрытие приложения после успеха
     const handleClose = () => {
         if (mx?.close) {
             mx.close();
@@ -132,7 +136,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         }
     };
 
-    // Если корзина пуста (не на экране успеха)
     if (cartItems.length === 0 && step !== 'success') {
         return (
             <div className="form-container">
@@ -140,17 +143,12 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     Корзина пуста. Добавьте товары для оформления заказа.
                 </p>
                 {onBack && (
-                    <button className="back-button" onClick={onBack}>
-                        ← Вернуться к товарам
-                    </button>
+                    <button className="back-button" onClick={onBack}>← Вернуться к товарам</button>
                 )}
             </div>
         );
     }
 
-    // ============================================
-    // ЭКРАН 4: УСПЕШНАЯ ОПЛАТА
-    // ============================================
     if (step === 'success') {
         return (
             <div className="form-container success-screen">
@@ -181,42 +179,26 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     </div>
                 </div>
 
-                <p className="success-note">
-                    Мы отправили подтверждение. Менеджер свяжется с вами в ближайшее время.
-                </p>
-
-                <button className="submit-button" onClick={handleClose}>
-                    Закрыть
-                </button>
+                <p className="success-note">Мы отправили подтверждение. Менеджер свяжется с вами в ближайшее время.</p>
+                <button className="submit-button" onClick={handleClose}>Закрыть</button>
             </div>
         );
     }
 
-    // ============================================
-    // ЭКРАН 3: ОБРАБОТКА ПЛАТЕЖА
-    // ============================================
     if (step === 'processing') {
         return (
             <div className="form-container processing-screen">
                 <div className="processing-spinner"></div>
                 <h2 className="processing-title">Обработка заказа...</h2>
-                <p className="processing-subtitle">
-                    Пожалуйста, не закрывайте приложение
-                </p>
+                <p className="processing-subtitle">Пожалуйста, не закрывайте приложение</p>
             </div>
         );
     }
 
-    // ============================================
-    // ЭКРАН 2: ВЫБОР СПОСОБА ОПЛАТЫ
-    // ============================================
     if (step === 'payment') {
         return (
             <div className="form-container">
-                <button className="back-button" onClick={() => setStep('form')} type="button">
-                    ← Назад к доставке
-                </button>
-
+                <button className="back-button" onClick={() => setStep('form')} type="button">← Назад к доставке</button>
                 <h2 className="form-title">Способ оплаты</h2>
 
                 <div className="order-summary">
@@ -244,19 +226,16 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
 
                 <div className="payment-methods">
                     <h3 className="payment-title">Выберите способ оплаты:</h3>
-                    
                     <label className={`payment-option ${paymentMethod === 'card' ? 'active' : ''}`}>
                         <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={(e) => setPaymentMethod(e.target.value)} />
                         <span className="payment-icon">💳</span>
                         <span className="payment-text"><strong>Банковская карта</strong><small>Visa, Mastercard, МИР</small></span>
                     </label>
-
                     <label className={`payment-option ${paymentMethod === 'sbp' ? 'active' : ''}`}>
                         <input type="radio" name="payment" value="sbp" checked={paymentMethod === 'sbp'} onChange={(e) => setPaymentMethod(e.target.value)} />
                         <span className="payment-icon">⚡</span>
                         <span className="payment-text"><strong>СБП</strong><small>Система быстрых платежей</small></span>
                     </label>
-
                     <label className={`payment-option ${paymentMethod === 'cash' ? 'active' : ''}`}>
                         <input type="radio" name="payment" value="cash" checked={paymentMethod === 'cash'} onChange={(e) => setPaymentMethod(e.target.value)} />
                         <span className="payment-icon">💵</span>
@@ -271,17 +250,9 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         );
     }
 
-    // ============================================
-    // ЭКРАН 1: ФОРМА ДОСТАВКИ (дефолтный)
-    // ============================================
     return (
         <div className="form-container">
-            {onBack && (
-                <button className="back-button" onClick={onBack} type="button">
-                    ← Назад к товарам
-                </button>
-            )}
-
+            {onBack && <button className="back-button" onClick={onBack} type="button">← Назад к товарам</button>}
             <h2 className="form-title">Данные для доставки</h2>
             
             <div className="form-group">
