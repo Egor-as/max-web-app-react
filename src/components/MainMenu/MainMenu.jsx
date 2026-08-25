@@ -6,9 +6,7 @@ const MainMenu = ({ onNavigate }) => {
     const { mx, user } = useMax();
 
     const handleHaptic = () => {
-        if (mx?.HapticFeedback) {
-            mx.HapticFeedback.impactOccurred('medium');
-        }
+        if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('medium');
     };
 
     return (
@@ -20,9 +18,10 @@ const MainMenu = ({ onNavigate }) => {
             </div>
             
             <div className="menu-buttons">
+                {/* 🔥 Теперь открывает список категорий, а не сразу товары */}
                 <button 
                     className="menu-btn primary-btn"
-                    onClick={() => { handleHaptic(); onNavigate('products'); }}
+                    onClick={() => { handleHaptic(); onNavigate('categories'); }}
                 >
                     🛒 Купить оборудование
                 </button>

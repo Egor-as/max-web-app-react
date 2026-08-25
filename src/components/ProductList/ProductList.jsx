@@ -3,44 +3,27 @@ import './ProductList.css';
 import ProductItem from '../ProductItem/ProductItem';
 import { useMax } from '../../hooks/useMax';
 
-// Массив товаров
-const products = [
-    { 
-        id: '1', 
-        title: 'Джинсы', 
-        price: 5000, 
-        description: 'Синего цвета, прямые', 
-        image: '/images/jeans.jpg' 
-    },
-    { 
-        id: '2', 
-        title: 'Куртка', 
-        price: 12000, 
-        description: 'Бордового цвета', 
-        image: '/images/jacket.jpg' 
-    },
-];
-
-// Функция подсчета итоговой суммы
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 };
 
-// Компонент принимает все необходимые пропсы от App.js
-const ProductList = ({ cartItems, setCartItems, onNavigateToForm, onNavigateToMain }) => {
+const ProductList = ({ 
+    category,           // ← Текущая категория
+    products,           // ← Товары этой категории
+    cartItems, 
+    setCartItems, 
+    onNavigateToForm, 
+    onBackToCategories  // ← Кнопка "Назад к категориям"
+}) => {
     const { mx } = useMax();
 
-    // Логика изменения количества товара
     const updateQuantity = useCallback((product, delta) => {
-        if (mx?.HapticFeedback) {
-            mx.HapticFeedback.impactOccurred('light');
-        }
+        if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('light');
 
         setCartItems(prevItems => {
             const existingItem = prevItems.find(item => item.id === product.id);
 
             if (delta > 0) {
-                // Увеличиваем количество или добавляем новый товар
                 if (existingItem) {
                     return prevItems.map(item =>
                         item.id === product.id 
@@ -50,7 +33,6 @@ const ProductList = ({ cartItems, setCartItems, onNavigateToForm, onNavigateToMa
                 }
                 return [...prevItems, { ...product, quantity: 1 }];
             } else {
-                // Уменьшаем количество
                 if (existingItem && existingItem.quantity > 1) {
                     return prevItems.map(item =>
                         item.id === product.id 
@@ -58,7 +40,6 @@ const ProductList = ({ cartItems, setCartItems, onNavigateToForm, onNavigateToMa
                             : item
                     );
                 }
-                // Если количество было 1 — удаляем товар из корзины
                 return prevItems.filter(item => item.id !== product.id);
             }
         });
@@ -69,41 +50,46 @@ const ProductList = ({ cartItems, setCartItems, onNavigateToForm, onNavigateToMa
 
     return (
         <div className="list">
-            {/* Кнопка возврата в главное меню */}
-            <button 
-                className="back-button" 
-                onClick={onNavigateToMain} 
-                style={{ marginBottom: '10px', marginLeft: '16px' }}
-            >
-                ← В главное меню
+            <button className="back-button" onClick={onBackToCategories}>
+                ← К категориям
             </button>
 
-            <h2 style={{ marginBottom: '20px', paddingLeft: '16px' }}>Каталог оборудования</h2>
+            <div style={{ paddingLeft: '16px', marginBottom: '20px' }}>
+                <h2 style={{ margin: '0 0 4px 0', fontSize: '24px' }}>
+                    {category?.icon} {category?.title}
+                </h2>
+                <p style={{ margin: 0, color: '#636366', fontSize: '14px' }}>
+                    {category?.description} • {products.length} товаров
+                </p>
+            </div>
             
-            {products.map(item => {
-                const cartItem = cartItems.find(ci => ci.id === item.id);
-                const quantity = cartItem ? cartItem.quantity : 0;
+            {products.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '40px 20px', color: '#636366' }}>
+                    В этой категории пока нет товаров
+                </p>
+            ) : (
+                products.map(item => {
+                    const cartItem = cartItems.find(ci => ci.id === item.id);
+                    const quantity = cartItem ? cartItem.quantity : 0;
 
-                return (
-                    <ProductItem
-                        key={item.id}
-                        product={item}
-                        quantity={quantity}
-                        onUpdateQuantity={updateQuantity}
-                        className="item"
-                    />
-                );
-            })}
+                    return (
+                        <ProductItem
+                            key={item.id}
+                            product={item}
+                            quantity={quantity}
+                            onUpdateQuantity={updateQuantity}
+                            className="item"
+                        />
+                    );
+                })
+            )}
 
-            {/* Кнопка перехода к оформлению заказа (появляется только если корзина не пуста) */}
             {!isCartEmpty && (
                 <div className="bottom-action-bar">
                     <button 
                         className="custom-main-button"
                         onClick={() => {
-                            if (mx?.HapticFeedback) {
-                                mx.HapticFeedback.impactOccurred('medium');
-                            }
+                            if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('medium');
                             onNavigateToForm();
                         }}
                     >
