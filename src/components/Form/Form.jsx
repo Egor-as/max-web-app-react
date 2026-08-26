@@ -3,29 +3,32 @@ import './Form.css';
 import { useMax } from '../../hooks/useMax';
 
 // ==========================================
-// 🔥 НАСТРОЙКА АДРЕСА СЕРВЕРА
+// 🔥 НАСТРОЙКА РЕЖИМА РАБОТЫ
 // ==========================================
-// Вариант 1: ИМИТАЦИЯ (работает без сервера, для тестов)
+// true — имитация оплаты (не нужен сервер, экран успеха гарантирован)
+// false — реальный запрос к серверу (нужен работающий бот)
 const USE_MOCK = true;
 
-// Вариант 2: Реальный сервер (когда будет готов)
-// const USE_MOCK = false;
+// Адрес сервера (активен только если USE_MOCK = false)
 // const API_URL = 'http://localhost:8000/web-data';
-// const API_URL = 'http://192.168.1.5:8000/web-data';  // для телефона в той же Wi-Fi сети
-// const API_URL = 'https://ваш-адрес.ngrok-free.app/web-data';  // через ngrok
+// const API_URL = 'http://192.168.1.5:8000/web-data';
+// const API_URL = 'https://ваш-адрес.ngrok-free.app/web-data';
 // ==========================================
 
 const getTotalPrice = (items = []) => {
     return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 };
 
-const Form = ({ cartItems, setCartItems, onBack }) => {
+const Form = ({ cartItems, setCartItems, onBack, onOrderComplete }) => {
     const [step, setStep] = useState('form');
     
+    // Данные доставки
     const [country, setCountry] = useState('');
     const [street, setStreet] = useState('');
     const [subject, setSubject] = useState('physical');
+    const [phone, setPhone] = useState('');
     
+    // Данные оплаты и заказа
     const [paymentMethod, setPaymentMethod] = useState('card');
     const [orderNumber, setOrderNumber] = useState('');
     const [totalPaid, setTotalPaid] = useState(0);
@@ -33,7 +36,12 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { mx, queryId, user } = useMax();
 
-    const isFormValid = country.trim().length > 0 && street.trim().length > 0;
+    // 🔥 Проверка валидности формы (добавлен телефон)
+    const isFormValid = 
+        country.trim().length > 0 && 
+        street.trim().length > 0 && 
+        phone.trim().length >= 5;
+    
     const total = getTotalPrice(cartItems);
 
     const updateQuantity = useCallback((product, delta) => {
@@ -77,6 +85,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
             payment: { method: paymentMethod, amount: total },
             queryId,
             userId: user?.id || null,
+            phone: phone.trim()
         };
 
         console.log('📦 Отправка заказа:', payload);
@@ -110,6 +119,23 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 console.log('✅ Заказ успешно оформлен!', result);
             }
 
+            // 🔥 Сохраняем заказ в localStorage через App
+            if (onOrderComplete) {
+                onOrderComplete({
+                    orderNumber: result.orderNumber,
+                    totalPrice: result.totalPrice || total,
+                    items: cartItems.map(item => ({
+                        id: item.id,
+                        title: item.title,
+                        price: item.price,
+                        quantity: item.quantity
+                    })),
+                    paymentMethod,
+                    delivery: { country, street, subject },
+                    phone: phone.trim()
+                });
+            }
+
             setOrderNumber(result.orderNumber || 'ORD-UNKNOWN');
             setTotalPaid(result.totalPrice || total);
             setCartItems([]);
@@ -134,13 +160,17 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [cartItems, country, street, subject, paymentMethod, total, isSubmitting, mx, queryId, user, setCartItems]);
+    }, [cartItems, country, street, subject, paymentMethod, phone, total, isSubmitting, mx, queryId, user, setCartItems, onOrderComplete]);
 
     const handleClose = () => {
         if (mx?.close) {
             mx.close();
         } else {
-            alert('Спасибо за покупку! Приложение будет закрыто.');
+            if (onBack) {
+                onBack();
+            } else {
+                alert('Спасибо за покупку!');
+            }
         }
     };
 
@@ -189,6 +219,10 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                         <span className="order-detail-label">Доставка:</span>
                         <span className="order-detail-value">{country}, {street}</span>
                     </div>
+                    <div className="order-detail-row">
+                        <span className="order-detail-label">Телефон:</span>
+                        <span className="order-detail-value">{phone}</span>
+                    </div>
                 </div>
 
                 <div className="success-tips">
@@ -203,6 +237,10 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     <div className="tip-item">
                         <span className="tip-icon">🚚</span>
                         <span>Доставка в течение 3 дней</span>
+                    </div>
+                    <div className="tip-item">
+                        <span className="tip-icon">👤</span>
+                        <span>Заказ сохранён в личном кабинете</span>
                     </div>
                 </div>
 
@@ -309,7 +347,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
             <h2 className="form-title">Данные для доставки</h2>
             
             <div className="form-group">
-                <label className="form-label">Страна / Город</label>
+                <label className="form-label">Страна / Город *</label>
                 <input
                     className="form-input"
                     type="text"
@@ -321,7 +359,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
             </div>
             
             <div className="form-group">
-                <label className="form-label">Улица, дом, квартира</label>
+                <label className="form-label">Улица, дом, квартира *</label>
                 <input
                     className="form-input"
                     type="text"
@@ -330,6 +368,21 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     onChange={(e) => setStreet(e.target.value)}
                     disabled={isSubmitting}
                 />
+            </div>
+
+            <div className="form-group">
+                <label className="form-label">Телефон *</label>
+                <input
+                    className="form-input"
+                    type="tel"
+                    placeholder="+7 (___) ___-__-__"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={isSubmitting}
+                />
+                <p style={{ fontSize: '12px', color: '#636366', margin: '4px 0 0 0' }}>
+                    Для входа в личный кабинет и связи с вами
+                </p>
             </div>
             
             <div className="form-group">
