@@ -149,7 +149,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         );
     }
 
-    if (step === 'success') {
+        if (step === 'success') {
         return (
             <div className="form-container success-screen">
                 <div className="success-icon">✓</div>
@@ -159,11 +159,11 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 <div className="order-details-card">
                     <div className="order-detail-row">
                         <span className="order-detail-label">Номер заказа:</span>
-                        <span className="order-detail-value">{orderNumber}</span>
+                        <span className="order-detail-value order-number">{orderNumber}</span>
                     </div>
                     <div className="order-detail-row">
                         <span className="order-detail-label">Сумма:</span>
-                        <span className="order-detail-value">{totalPaid.toLocaleString('ru-RU')} ₽</span>
+                        <span className="order-detail-value price-value">{totalPaid.toLocaleString('ru-RU')} ₽</span>
                     </div>
                     <div className="order-detail-row">
                         <span className="order-detail-label">Способ оплаты:</span>
@@ -179,8 +179,24 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     </div>
                 </div>
 
-                <p className="success-note">Мы отправили подтверждение. Менеджер свяжется с вами в ближайшее время.</p>
-                <button className="submit-button" onClick={handleClose}>Закрыть</button>
+                <div className="success-tips">
+                    <div className="tip-item">
+                        <span className="tip-icon">📧</span>
+                        <span>Подтверждение отправлено</span>
+                    </div>
+                    <div className="tip-item">
+                        <span className="tip-icon">📞</span>
+                        <span>Менеджер свяжется с вами</span>
+                    </div>
+                    <div className="tip-item">
+                        <span className="tip-icon">🚚</span>
+                        <span>Доставка в течение 3 дней</span>
+                    </div>
+                </div>
+
+                <button className="submit-button" onClick={handleClose}>
+                    Закрыть
+                </button>
             </div>
         );
     }

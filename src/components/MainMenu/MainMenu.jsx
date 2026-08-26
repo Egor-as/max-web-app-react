@@ -12,26 +12,54 @@ const MainMenu = ({ onNavigate }) => {
     return (
         <div className="main-menu-container">
             <div className="welcome-header">
-                <h1 className="main-title">Добро пожаловать!</h1>
-                {user && <p className="main-subtitle">Рады видеть вас, {user.first_name} 👋</p>}
-                <p className="main-description">Выберите необходимое действие:</p>
+                <div className="welcome-logo">🛍️</div>
+                <h1 className="main-title">
+                    {user ? `Привет, ${user.first_name}!` : 'Добро пожаловать!'}
+                </h1>
+                <p className="main-description">
+                    Торговое оборудование для вашего бизнеса
+                </p>
             </div>
             
             <div className="menu-buttons">
-                {/* 🔥 Теперь открывает список категорий, а не сразу товары */}
                 <button 
                     className="menu-btn primary-btn"
                     onClick={() => { handleHaptic(); onNavigate('categories'); }}
                 >
-                    🛒 Купить оборудование
+                    <span className="menu-btn-icon">🛒</span>
+                    <span className="menu-btn-text">
+                        <span className="menu-btn-title">Купить оборудование</span>
+                        <span className="menu-btn-subtitle">Каталог товаров</span>
+                    </span>
+                    <span className="menu-btn-arrow">→</span>
                 </button>
                 
                 <button 
                     className="menu-btn secondary-btn"
                     onClick={() => { handleHaptic(); onNavigate('specialist'); }}
                 >
-                    🛠️ Вызов специалиста
+                    <span className="menu-btn-icon">🛠️</span>
+                    <span className="menu-btn-text">
+                        <span className="menu-btn-title">Вызов специалиста</span>
+                        <span className="menu-btn-subtitle">Консультация и настройка</span>
+                    </span>
+                    <span className="menu-btn-arrow">→</span>
                 </button>
+            </div>
+
+            <div className="menu-footer">
+                <div className="footer-item">
+                    <span className="footer-icon">🚚</span>
+                    <span>Быстрая доставка</span>
+                </div>
+                <div className="footer-item">
+                    <span className="footer-icon">💳</span>
+                    <span>Удобная оплата</span>
+                </div>
+                <div className="footer-item">
+                    <span className="footer-icon">🎧</span>
+                    <span>Поддержка 24/7</span>
+                </div>
             </div>
         </div>
     );
