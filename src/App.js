@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import { useMax } from './hooks/useMax';
-import { useLocalStorage } from './hooks/useLocalStorage';
 
 import MainMenu from './components/MainMenu/MainMenu';
 import CategoryList from './components/CategoryList/CategoryList';
@@ -9,8 +8,6 @@ import ProductList from './components/ProductList/ProductList';
 import ProductDetail from './components/ProductDetail/ProductDetail';
 import Form from './components/Form/Form';
 import Specialist from './components/Specialist/Specialist';
-import Account from './components/Account/Account';
-import Admin from './components/Admin/Admin';
 
 // ============================================
 // 🔥 ВСТРОЕННЫЕ ДАННЫЕ (пока нет реального сервера)
@@ -495,7 +492,7 @@ const PRODUCTS = [
 
   // Распродажа
   { 
-    id: 'rs-1', categoryId: 'rasprodazha', title: 'Штрих-М ФР (акция)', price: 14900, isSale: true,
+    id: 'rs-1', categoryId: 'rasprodazha', title: 'Штрих-М ФР (акция)', price: 14900, 
     description: 'Скидка 20%! Фискальный регистратор',
     fullDescription: 'Специальное предложение! Фискальный регистратор Штрих-М ФР со скидкой 20%. Компактный, надёжный, подходит для небольших магазинов. Количество ограничено!',
     specs: [
@@ -508,7 +505,7 @@ const PRODUCTS = [
     icon: '🔥', image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=400&fit=crop' 
   },
   { 
-    id: 'rs-2', categoryId: 'rasprodazha', title: 'Godex G500 (акция)', price: 9900, isSale: true,
+    id: 'rs-2', categoryId: 'rasprodazha', title: 'Godex G500 (акция)', price: 9900, 
     description: 'Скидка 21%! Принтер этикеток',
     fullDescription: 'Акция! Принтер этикеток Godex G500 со скидкой 21%. Термотрансферная печать, надёжная конструкция. Идеально для малого бизнеса.',
     specs: [
@@ -577,12 +574,6 @@ function App() {
   const [productsForCategory, setProductsForCategory] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // 🔥 Хранилище товаров в localStorage (с начальным значением из PRODUCTS)
-  const [allProducts, setAllProducts] = useLocalStorage('products', PRODUCTS);
-
-  // 🔥 Хранилище заказов в localStorage
-  const [orders, setOrders] = useLocalStorage('orders', []);
-
   useEffect(() => {
     if (mx) {
       mx.ready();
@@ -592,7 +583,7 @@ function App() {
 
   const handleSelectCategory = (category) => {
     setSelectedCategory(category);
-    const filtered = allProducts.filter(p => p.categoryId === category.id);
+    const filtered = PRODUCTS.filter(p => p.categoryId === category.id);
     setProductsForCategory(filtered);
     setCurrentScreen('products');
   };
@@ -602,6 +593,7 @@ function App() {
     setCurrentScreen('productDetail');
   };
 
+  // Универсальная функция обновления количества товара в корзине
   const updateCartQuantity = (product, delta) => {
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.id === product.id);
@@ -626,32 +618,6 @@ function App() {
         return prevItems.filter(item => item.id !== product.id);
       }
     });
-  };
-
-  // 🔥 Добавление товара через админку
-  const handleAddProduct = (product) => {
-    setAllProducts(prev => [...prev, product]);
-  };
-
-  // 🔥 Удаление товара через админку
-  const handleDeleteProduct = (productId) => {
-    setAllProducts(prev => prev.filter(p => p.id !== productId));
-    setCartItems(prev => prev.filter(i => i.id !== productId));
-  };
-
-  // 🔥 Сохранение заказа после оформления
-  const handleOrderComplete = (orderData) => {
-    const newOrder = {
-      id: Date.now(),
-      orderNumber: orderData.orderNumber,
-      totalPrice: orderData.totalPrice,
-      items: orderData.items,
-      paymentMethod: orderData.paymentMethod,
-      delivery: orderData.delivery,
-      phone: orderData.phone,
-      createdAt: new Date().toISOString()
-    };
-    setOrders(prev => [newOrder, ...prev]);
   };
 
   return (
@@ -694,29 +660,11 @@ function App() {
           cartItems={cartItems}
           setCartItems={setCartItems}
           onBack={() => setCurrentScreen('products')}
-          onOrderComplete={handleOrderComplete}
         />
       )}
 
       {currentScreen === 'specialist' && (
         <Specialist onBack={() => setCurrentScreen('main')} />
-      )}
-
-      {currentScreen === 'account' && (
-        <Account 
-          orders={orders}
-          onBack={() => setCurrentScreen('main')}
-        />
-      )}
-
-      {currentScreen === 'admin' && (
-        <Admin 
-          products={allProducts}
-          categories={CATEGORIES}
-          onAddProduct={handleAddProduct}
-          onDeleteProduct={handleDeleteProduct}
-          onBack={() => setCurrentScreen('main')}
-        />
       )}
     </div>
   );

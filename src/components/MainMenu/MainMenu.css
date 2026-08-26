@@ -124,20 +124,3 @@
 .footer-icon {
     font-size: 24px;
 }
-
-/* 🔥 Новые стили для кнопок Личного кабинета и Админки */
-.menu-btn.accent-btn .menu-btn-icon {
-    background: linear-gradient(135deg, #fff0f0 0%, #ffe3e3 100%);
-}
-
-.menu-btn.admin-btn .menu-btn-icon {
-    background: linear-gradient(135deg, #f0fff4 0%, #e3ffe7 100%);
-}
-
-.menu-btn.admin-btn {
-    background-color: rgba(255, 255, 255, 0.75);
-}
-
-.menu-btn.admin-btn .menu-btn-arrow {
-    color: #34c759;
-}

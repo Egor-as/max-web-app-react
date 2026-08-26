@@ -45,32 +45,6 @@ const MainMenu = ({ onNavigate }) => {
                     </span>
                     <span className="menu-btn-arrow">→</span>
                 </button>
-
-                {/* 🔥 НОВАЯ КНОПКА: Личный кабинет */}
-                <button 
-                    className="menu-btn accent-btn"
-                    onClick={() => { handleHaptic(); onNavigate('account'); }}
-                >
-                    <span className="menu-btn-icon">👤</span>
-                    <span className="menu-btn-text">
-                        <span className="menu-btn-title">Личный кабинет</span>
-                        <span className="menu-btn-subtitle">Мои покупки и лицензии</span>
-                    </span>
-                    <span className="menu-btn-arrow">→</span>
-                </button>
-
-                {/* 🔥 НОВАЯ КНОПКА: Админ-панель */}
-                <button 
-                    className="menu-btn admin-btn"
-                    onClick={() => { handleHaptic(); onNavigate('admin'); }}
-                >
-                    <span className="menu-btn-icon">⚙️</span>
-                    <span className="menu-btn-text">
-                        <span className="menu-btn-title">Админ-панель</span>
-                        <span className="menu-btn-subtitle">Управление товарами</span>
-                    </span>
-                    <span className="menu-btn-arrow">→</span>
-                </button>
             </div>
 
             <div className="menu-footer">
