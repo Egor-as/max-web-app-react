@@ -1,0 +1,65 @@
+/* ============================================
+   ЭКРАН ОТМЕНЁННОЙ ОПЛАТЫ
+   ============================================ */
+
+/* 🔥 Красная иконка отмены (переопределяет зелёную из PaymentSuccess) */
+.payment-result-container.cancel .result-icon {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    font-weight: bold;
+    margin-bottom: 24px;
+    animation: cancelPop 0.5s ease-out;
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.3);
+}
+
+/* 🔥 Анимация появления иконки отмены */
+@keyframes cancelPop {
+    0% { 
+        transform: scale(0) rotate(-180deg); 
+        opacity: 0; 
+    }
+    50% { 
+        transform: scale(1.2) rotate(10deg); 
+    }
+    100% { 
+        transform: scale(1) rotate(0deg); 
+        opacity: 1; 
+    }
+}
+
+/* 🔥 Заголовок "Оплата отменена" — красный оттенок */
+.payment-result-container.cancel .result-title {
+    color: #ff3b30;
+}
+
+/* 🔥 Кнопка "Закрыть" — серый цвет (нейтральный) */
+.payment-result-container.cancel .close-button {
+    background: linear-gradient(135deg, #8e8e93 0%, #636366 100%);
+    box-shadow: 0 4px 16px rgba(142, 142, 147, 0.3);
+}
+
+.payment-result-container.cancel .close-button:active {
+    background: linear-gradient(135deg, #636366 0%, #48484a 100%);
+}
+
+/* 🔥 Подсказки — с красным акцентом */
+.payment-result-container.cancel .result-tips p {
+    color: #636366;
+}
+
+.payment-result-container.cancel .result-tips p:first-child {
+    color: #ff3b30;
+    font-weight: 500;
+}
+
+/* 🔥 Подзаголовок — более мягкий цвет */
+.payment-result-container.cancel .result-subtitle {
+    color: #8e8e93;
+}
