@@ -8,12 +8,13 @@ const getTotalPrice = (items = []) => {
 };
 
 const ProductList = ({ 
-    category,           // ← Текущая категория
-    products,           // ← Товары этой категории
+    category,
+    products,
     cartItems, 
     setCartItems, 
     onNavigateToForm, 
-    onBackToCategories  // ← Кнопка "Назад к категориям"
+    onBackToCategories,
+    onProductClick  // 🔥 Новая пропса
 }) => {
     const { mx } = useMax();
 
@@ -78,6 +79,7 @@ const ProductList = ({
                             product={item}
                             quantity={quantity}
                             onUpdateQuantity={updateQuantity}
+                            onProductClick={onProductClick}  // 🔥 Передаём дальше
                             className="item"
                         />
                     );

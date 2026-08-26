@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
 import './ProductItem.css';
 
-const ProductItem = ({ product, quantity, onUpdateQuantity }) => {
+const ProductItem = ({ product, quantity, onUpdateQuantity, onProductClick }) => {
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
+    const handleOpenDetail = () => {
+        if (onProductClick) {
+            onProductClick(product);
+        }
+    };
+
     return (
         <div className="product-item">
-            {/* 🔥 Верхняя часть: картинка слева + информация справа */}
             <div className="product-top">
-                {/* Картинка слева */}
-                <div className="product-image-container">
+                {/* 🔥 Картинка кликабельная */}
+                <div 
+                    className="product-image-container clickable" 
+                    onClick={handleOpenDetail}
+                >
                     {product.image && !imageError ? (
                         <>
                             <img
@@ -34,16 +42,19 @@ const ProductItem = ({ product, quantity, onUpdateQuantity }) => {
                     )}
                 </div>
 
-                {/* 🔥 Блок справа: название → цена → кнопка */}
                 <div className="product-info">
-                    <h3 className="product-title">{product.title}</h3>
+                    {/* 🔥 Название кликабельное */}
+                    <h3 
+                        className="product-title clickable" 
+                        onClick={handleOpenDetail}
+                    >
+                        {product.title}
+                    </h3>
                     
-                    {/* 🔥 Цена НАД кнопкой */}
                     <div className="product-price">
                         {product.price.toLocaleString('ru-RU')} ₽
                     </div>
                     
-                    {/* 🔥 Кнопка "В корзину" ПОД ценой */}
                     <div className="product-controls">
                         {quantity > 0 ? (
                             <div className="quantity-control">
@@ -73,8 +84,13 @@ const ProductItem = ({ product, quantity, onUpdateQuantity }) => {
                 </div>
             </div>
 
-            {/* 🔥 Описание ПОД всем блоком (на всю ширину карточки) */}
-            <p className="product-description">{product.description}</p>
+            {/* 🔥 Описание тоже кликабельное */}
+            <p 
+                className="product-description clickable" 
+                onClick={handleOpenDetail}
+            >
+                {product.description}
+            </p>
         </div>
     );
 };

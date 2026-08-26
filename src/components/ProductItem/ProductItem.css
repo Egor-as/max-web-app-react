@@ -167,3 +167,21 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+/* 🔥 Стили для кликабельных элементов */
+.clickable {
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.clickable:active {
+    opacity: 0.7;
+}
+
+.product-title.clickable {
+    color: #1c1c1e;
+}
+
+.product-description.clickable {
+    cursor: pointer;
+}
