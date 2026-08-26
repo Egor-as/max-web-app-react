@@ -22,7 +22,6 @@ const MainMenu = ({ onNavigate }) => {
             </div>
             
             <div className="menu-buttons">
-                {/* Кнопка 1: Каталог */}
                 <button 
                     className="menu-btn primary-btn"
                     onClick={() => { handleHaptic(); onNavigate('categories'); }}
@@ -35,7 +34,6 @@ const MainMenu = ({ onNavigate }) => {
                     <span className="menu-btn-arrow">→</span>
                 </button>
                 
-                {/* Кнопка 2: Специалист */}
                 <button 
                     className="menu-btn secondary-btn"
                     onClick={() => { handleHaptic(); onNavigate('specialist'); }}
@@ -48,7 +46,7 @@ const MainMenu = ({ onNavigate }) => {
                     <span className="menu-btn-arrow">→</span>
                 </button>
 
-                {/* Кнопка 3: Личный кабинет */}
+                {/* 🔥 НОВАЯ КНОПКА: Личный кабинет */}
                 <button 
                     className="menu-btn accent-btn"
                     onClick={() => { handleHaptic(); onNavigate('account'); }}
@@ -61,7 +59,7 @@ const MainMenu = ({ onNavigate }) => {
                     <span className="menu-btn-arrow">→</span>
                 </button>
 
-                {/* Кнопка 4: Админ-панель */}
+                {/* 🔥 НОВАЯ КНОПКА: Админ-панель */}
                 <button 
                     className="menu-btn admin-btn"
                     onClick={() => { handleHaptic(); onNavigate('admin'); }}

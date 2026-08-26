@@ -20,7 +20,7 @@ const ProductList = ({
     
     // 🔥 Состояния поиска и фильтров
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState('default');
+    const [sortBy, setSortBy] = useState('default'); // default | price_asc | price_desc | name
     const [showFilters, setShowFilters] = useState(false);
     const [priceRange, setPriceRange] = useState({ min: '', max: '' });
     const [onlySale, setOnlySale] = useState(false);
@@ -63,6 +63,7 @@ const ProductList = ({
                 result.sort((a, b) => a.title.localeCompare(b.title));
                 break;
             default:
+                // Оставляем исходный порядок
                 break;
         }
 
