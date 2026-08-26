@@ -1,3 +1,4 @@
+/* stylelint-disable property-no-vendor-prefix, property-no-unknown */
 /* 🔥 Горизонтальный layout */
 .product-item {
     display: flex;
