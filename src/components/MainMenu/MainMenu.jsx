@@ -22,6 +22,7 @@ const MainMenu = ({ onNavigate }) => {
             </div>
             
             <div className="menu-buttons">
+                {/* Кнопка 1: Каталог */}
                 <button 
                     className="menu-btn primary-btn"
                     onClick={() => { handleHaptic(); onNavigate('categories'); }}
@@ -34,6 +35,7 @@ const MainMenu = ({ onNavigate }) => {
                     <span className="menu-btn-arrow">→</span>
                 </button>
                 
+                {/* Кнопка 2: Специалист */}
                 <button 
                     className="menu-btn secondary-btn"
                     onClick={() => { handleHaptic(); onNavigate('specialist'); }}
@@ -42,6 +44,32 @@ const MainMenu = ({ onNavigate }) => {
                     <span className="menu-btn-text">
                         <span className="menu-btn-title">Вызов специалиста</span>
                         <span className="menu-btn-subtitle">Консультация и настройка</span>
+                    </span>
+                    <span className="menu-btn-arrow">→</span>
+                </button>
+
+                {/* Кнопка 3: Личный кабинет */}
+                <button 
+                    className="menu-btn accent-btn"
+                    onClick={() => { handleHaptic(); onNavigate('account'); }}
+                >
+                    <span className="menu-btn-icon">👤</span>
+                    <span className="menu-btn-text">
+                        <span className="menu-btn-title">Личный кабинет</span>
+                        <span className="menu-btn-subtitle">Мои покупки и лицензии</span>
+                    </span>
+                    <span className="menu-btn-arrow">→</span>
+                </button>
+
+                {/* Кнопка 4: Админ-панель */}
+                <button 
+                    className="menu-btn admin-btn"
+                    onClick={() => { handleHaptic(); onNavigate('admin'); }}
+                >
+                    <span className="menu-btn-icon">⚙️</span>
+                    <span className="menu-btn-text">
+                        <span className="menu-btn-title">Админ-панель</span>
+                        <span className="menu-btn-subtitle">Управление товарами</span>
                     </span>
                     <span className="menu-btn-arrow">→</span>
                 </button>
