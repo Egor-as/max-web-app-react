@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-// 🔥 ВАШ АДРЕС СЕРВЕРА (из LocalTunnel)
+// 🔥 АДРЕС СЕРВЕРА (из LocalTunnel)
 const API_BASE_URL = 'https://mighty-states-lie.loca.lt';
 
 export function useApi() {
