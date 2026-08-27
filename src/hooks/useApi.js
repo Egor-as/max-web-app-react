@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 // 🔥 ВАШ АДРЕС СЕРВЕРА (из LocalTunnel)
-const API_BASE_URL = 'https://chilly-planes-refuse.loca.lt';
+const API_BASE_URL = 'https://mighty-states-lie.loca.lt';
 
 export function useApi() {
   const [loading, setLoading] = useState(false);
