@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import './Admin.css';
 import { useMax } from '../../hooks/useMax';
-
-// 🔥 Пароль администратора (в реальном проекте — на сервере!)
-const ADMIN_PASSWORD = 'admin123';
+import { useApi } from '../../hooks/useApi';
 
 const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) => {
-    const { mx } = useMax();
+    const { mx, user } = useMax();
+    const { request } = useApi();
+    
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
-    const [activeTab, setActiveTab] = useState('list'); // 'list' | 'add'
+    const [adminToken, setAdminToken] = useState('');
+    const [activeTab, setActiveTab] = useState('list');
+    const [isLoading, setIsLoading] = useState(false);
     
-    // Форма добавления товара
     const [newProduct, setNewProduct] = useState({
         title: '',
         price: '',
@@ -22,20 +23,77 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
         image: ''
     });
 
-    const handleLogin = () => {
-        if (password === ADMIN_PASSWORD) {
-            setIsAuthenticated(true);
-            if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
-        } else {
-            if (mx?.showAlert) {
-                mx.showAlert({ message: 'Неверный пароль' });
-            } else {
-                alert('Неверный пароль');
+    // 🔥 Вход через серверную проверку ID + пароль
+    const handleLogin = async () => {
+        if (!password.trim()) {
+            alert('Введите пароль');
+            return;
+        }
+
+        console.log('🕵️ [ФРОНТЕНД] Объект user:', user);
+        console.log('🕵️ [ФРОНТЕНД] ID, который мы отправим:', user?.id);
+
+        if (!user || !user.id) {
+            const msg = 'Не удалось определить ваш ID. Пожалуйста, откройте приложение через Max.';
+            if (mx?.showAlert) mx.showAlert({ message: msg });
+            else alert(msg);
+            return;
+        }
+
+        const userIdStr = String(user.id).trim();
+        if (userIdStr === '' || userIdStr === 'undefined' || userIdStr === 'null') {
+            alert('Ваш ID не определён корректно. Перезапустите приложение.');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            console.log(`📤 [ФРОНТЕНД] Отправка запроса на вход с ID: ${userIdStr}`);
+            
+            const result = await request('/api/admin/login', {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    password, 
+                    userId: userIdStr 
+                })
+            });
+            
+            console.log('📥 [ФРОНТЕНД] Успешный ответ от сервера:', result);
+            
+            if (result.success && result.token) {
+                setIsAuthenticated(true);
+                setAdminToken(result.token);
+                if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
             }
+        } catch (error) {
+            console.error('❌ [ФРОНТЕНД] Ошибка входа:', error);
+            let errorMsg = 'Неверный пароль или доступ запрещён';
+            if (error.message.includes('ID') || error.message.includes('403')) {
+                errorMsg = 'Доступ запрещён. Только администратор может войти.';
+            }
+            
+            if (mx?.showAlert) mx.showAlert({ message: errorMsg });
+            else alert(errorMsg);
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleAddProduct = () => {
+    const handleLogout = async () => {
+        try {
+            await request('/api/admin/logout', {
+                method: 'POST',
+                headers: { 'x-admin-token': adminToken }
+            });
+        } catch (error) {
+            console.error('Ошибка выхода:', error);
+        }
+        setIsAuthenticated(false);
+        setAdminToken('');
+        setPassword('');
+    };
+
+    const handleAddProduct = async () => {
         if (!newProduct.title.trim() || !newProduct.price || !newProduct.categoryId) {
             if (mx?.showAlert) {
                 mx.showAlert({ message: 'Заполните обязательные поля' });
@@ -45,98 +103,142 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
             return;
         }
 
-        const product = {
-            id: 'custom-' + Date.now(),
-            title: newProduct.title.trim(),
-            price: Number(newProduct.price),
-            description: newProduct.description.trim(),
-            fullDescription: newProduct.fullDescription.trim() || newProduct.description.trim(),
-            categoryId: newProduct.categoryId,
-            icon: newProduct.icon || '📦',
-            image: newProduct.image.trim(),
-            isCustom: true,
-            createdAt: new Date().toISOString()
-        };
+        setIsLoading(true);
+        try {
+            const product = {
+                id: 'custom-' + Date.now(),
+                title: newProduct.title.trim(),
+                price: Number(newProduct.price),
+                description: newProduct.description.trim(),
+                fullDescription: newProduct.fullDescription.trim() || newProduct.description.trim(),
+                categoryId: newProduct.categoryId,
+                icon: newProduct.icon || '📦',
+                image: newProduct.image.trim()
+            };
 
-        onAddProduct(product);
-        
-        // Сброс формы
-        setNewProduct({
-            title: '',
-            price: '',
-            description: '',
-            fullDescription: '',
-            categoryId: categories[0]?.id || '',
-            icon: '📦',
-            image: ''
-        });
-        
-        setActiveTab('list');
-        
-        if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
+            const result = await request('/api/products', {
+                method: 'POST',
+                headers: { 'x-admin-token': adminToken },
+                body: JSON.stringify(product)
+            });
+            
+            onAddProduct(result.product);
+            
+            setNewProduct({
+                title: '',
+                price: '',
+                description: '',
+                fullDescription: '',
+                categoryId: categories[0]?.id || '',
+                icon: '📦',
+                image: ''
+            });
+            
+            setActiveTab('list');
+            
+            if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
+        } catch (error) {
+            alert(`❌ Ошибка: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleDelete = (productId) => {
-        if (window.confirm('Удалить этот товар?')) {
+    const handleDelete = async (productId) => {
+        if (!window.confirm('Удалить этот товар?')) return;
+        
+        setIsLoading(true);
+        try {
+            await request(`/api/products/${productId}`, { 
+                method: 'DELETE',
+                headers: { 'x-admin-token': adminToken }
+            });
             onDeleteProduct(productId);
             if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('medium');
+        } catch (error) {
+            alert(`❌ Ошибка: ${error.message}`);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     // ============================================
-    // ЭКРАН ВХОДА
+    // 🔍 ЭКРАН ВХОДА (С ДИАГНОСТИКОЙ)
     // ============================================
     if (!isAuthenticated) {
         return (
             <div className="admin-container">
-                {onBack && (
-                    <button className="back-button" onClick={onBack}>← Назад</button>
-                )}
+                {onBack && <button className="back-button" onClick={onBack}>← Назад</button>}
+                
+                {/* 🔥 ДИАГНОСТИЧЕСКИЙ БЛОК — покажет, что видит фронтенд */}
+                <div style={{ 
+                    background: '#fff3cd', 
+                    border: '2px solid #ffc107', 
+                    padding: '12px', 
+                    margin: '12px 16px', 
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontFamily: 'monospace',
+                    wordBreak: 'break-all'
+                }}>
+                    <strong>🔍 Диагностика:</strong><br/>
+                    user: {user ? JSON.stringify(user) : 'null'}<br/>
+                    user.id: {user?.id !== undefined ? String(user.id) : 'undefined'}<br/>
+                    mx: {mx ? 'есть' : 'нет'}<br/>
+                    mx.initDataUnsafe: {mx?.initDataUnsafe ? JSON.stringify(mx.initDataUnsafe) : 'нет'}
+                </div>
                 
                 <div className="admin-login">
                     <div className="login-icon">🔐</div>
                     <h2 className="login-title">Админ-панель</h2>
-                    <p className="login-subtitle">Введите пароль для доступа</p>
-                    
-                    <div className="form-group">
-                        <label className="form-label">Пароль</label>
-                        <input
-                            className="form-input"
-                            type="password"
-                            placeholder="Введите пароль"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                        />
-                    </div>
-                    
-                    <button className="submit-button" onClick={handleLogin}>
-                        Войти
-                    </button>
-                    
-                    <p className="password-hint">
-                        Подсказка: admin123
+                    <p className="login-subtitle">
+                        {user?.id ? `Вход для пользователя ID: ${user.id}` : 'Откройте приложение через Max для входа'}
                     </p>
+                    
+                    {user?.id ? (
+                        <>
+                            <div className="form-group">
+                                <label className="form-label">Пароль</label>
+                                <input 
+                                    className="form-input" 
+                                    type="password" 
+                                    placeholder="Введите пароль" 
+                                    value={password} 
+                                    onChange={(e) => setPassword(e.target.value)} 
+                                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()} 
+                                    disabled={isLoading} 
+                                />
+                            </div>
+                            <button 
+                                className="submit-button" 
+                                onClick={handleLogin} 
+                                disabled={isLoading}
+                            >
+                                {isLoading ? 'Проверка...' : 'Войти'}
+                            </button>
+                        </>
+                    ) : (
+                        <p style={{ color: '#ff3b30', textAlign: 'center' }}>
+                            ⚠️ Не удалось определить ваш ID.<br/>
+                            Откройте приложение через Max.
+                        </p>
+                    )}
                 </div>
             </div>
         );
     }
 
     // ============================================
-    // АДМИН-ПАНЕЛЬ
+    // АДМИН-ПАНЕЛЬ (после успешного входа)
     // ============================================
     return (
         <div className="admin-container">
-            {onBack && (
-                <button className="back-button" onClick={onBack}>← Назад</button>
-            )}
-
+            {onBack && <button className="back-button" onClick={onBack}>← Назад</button>}
             <div className="admin-header">
                 <h2 className="admin-title">🛠️ Управление товарами</h2>
                 <p className="admin-subtitle">Всего товаров: {products.length}</p>
+                <button className="logout-btn" onClick={handleLogout}>Выйти</button>
             </div>
-
-            {/* Вкладки */}
             <div className="admin-tabs">
                 <button 
                     className={`admin-tab ${activeTab === 'list' ? 'active' : ''}`}
@@ -151,8 +253,6 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                     ➕ Добавить
                 </button>
             </div>
-
-            {/* Вкладка: Список товаров */}
             {activeTab === 'list' && (
                 <div className="admin-products-list">
                     {products.map(product => {
@@ -176,6 +276,7 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                                 <button 
                                     className="admin-delete-btn"
                                     onClick={() => handleDelete(product.id)}
+                                    disabled={isLoading}
                                 >
                                     🗑️
                                 </button>
@@ -184,8 +285,6 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                     })}
                 </div>
             )}
-
-            {/* Вкладка: Добавление товара */}
             {activeTab === 'add' && (
                 <div className="admin-form">
                     <div className="form-group">
@@ -270,8 +369,12 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                         />
                     </div>
 
-                    <button className="submit-button" onClick={handleAddProduct}>
-                        ✅ Добавить товар
+                    <button 
+                        className="submit-button" 
+                        onClick={handleAddProduct}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Добавление...' : '✅ Добавить товар'}
                     </button>
                 </div>
             )}
