@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 // 🔥 АДРЕС СЕРВЕРА (из LocalTunnel)
-const API_BASE_URL = 'https://all-cows-invite.loca.lt';
+const API_BASE_URL = 'http://localhost:8000';
 
 export function useApi() {
   const [loading, setLoading] = useState(false);

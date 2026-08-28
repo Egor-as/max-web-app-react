@@ -1,29 +1,44 @@
-// src/hooks/useMax.js
-// Финальная стабильная версия
-
-const mx = window.WebApp || {
-    ready: () => {},
-    expand: () => {},
-    close: () => { window.close(); },
-    MainButton: { show: () => {}, hide: () => {}, isVisible: false, setParams: () => {}, onClick: () => {}, offClick: () => {} },
-    HapticFeedback: { impactOccurred: () => {}, notificationOccurred: () => {} },
-    initDataUnsafe: {},
-    showAlert: (params) => alert(params.message || 'Alert')
-};
+import { useState, useEffect } from 'react';
 
 export function useMax() {
-    const user = mx.initDataUnsafe?.user || null;
-    const queryId = mx.initDataUnsafe?.query_id || null;
-    
-    const onClose = () => {
-        if (mx?.close) mx.close();
-    };
+  const [maxData, setMaxData] = useState({
+    mx: null,
+    user: null,
+    queryId: null,
+  });
 
-    return {
-        onClose,
-        mx,
-        user,       // Будет null, если Max не передал данные (и это нормально)
-        queryId,    // Будет null, если Max не передал данные
-        isInsideMax: !!window.WebApp,
-    };
+  useEffect(() => {
+    // Проверяем наличие объекта MaxWebApp (или его аналогов)
+    const maxApp = window.MaxWebApp || window.TelegramWebApp || window.WebApp;
+
+    if (maxApp) {
+      maxApp.ready();
+      if (maxApp.expand) maxApp.expand();
+
+      const user = maxApp.initDataUnsafe?.user;
+      const queryId = maxApp.initDataUnsafe?.query_id;
+
+      console.log('🔍 [useMax] Данные от Max:', maxApp.initDataUnsafe);
+      console.log('🔍 [useMax] Извлеченный user:', user);
+
+      setMaxData({
+        mx: maxApp,
+        user: user || null,
+        queryId: queryId || null,
+      });
+    } else {
+      console.warn('⚠️ [useMax] Объект MaxWebApp не найден. Запуск вне среды Max?');
+      
+      // 🔥 ВРЕМЕННЫЙ РЕЖИМ РАЗРАБОТЧИКА (ТОЛЬКО ДЛЯ ЛОКАЛЬНОГО ТЕСТА!)
+      // Мы имитируем данные пользователя, чтобы вы могли тестировать админку на ПК.
+      // ВАЖНО: Перед финальной загрузкой на Netlify этот блок нужно будет удалить!
+      setMaxData({
+        mx: null,
+        user: { id: 12254301, first_name: 'Егор (Dev)' }, // Ваш реальный ID из логов
+        queryId: 'dev-local-test',
+      });
+    }
+  }, []);
+
+  return maxData;
 }
