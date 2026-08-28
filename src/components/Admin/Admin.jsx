@@ -25,59 +25,72 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
 
     // 🔥 Вход через серверную проверку ID + пароль
     const handleLogin = async () => {
-        if (!password.trim()) {
-            alert('Введите пароль');
-            return;
-        }
+    if (!password.trim()) {
+        alert('Введите пароль');
+        return;
+    }
 
-        console.log('🕵️ [ФРОНТЕНД] Объект user:', user);
-        console.log('🕵️ [ФРОНТЕНД] ID, который мы отправим:', user?.id);
+    console.log('🕵️ [ФРОНТЕНД] Объект user:', user);
+    console.log('🕵️ [ФРОНТЕНД] ID, который мы отправим:', user?.id);
 
-        if (!user || !user.id) {
-            const msg = 'Не удалось определить ваш ID. Пожалуйста, откройте приложение через Max.';
-            if (mx?.showAlert) mx.showAlert({ message: msg });
-            else alert(msg);
-            return;
-        }
+    if (!user || !user.id) {
+        const msg = 'Не удалось определить ваш ID. Пожалуйста, откройте приложение через Max.';
+        if (mx?.showAlert) mx.showAlert({ message: msg });
+        else alert(msg);
+        return;
+    }
 
-        const userIdStr = String(user.id).trim();
-        if (userIdStr === '' || userIdStr === 'undefined' || userIdStr === 'null') {
-            alert('Ваш ID не определён корректно. Перезапустите приложение.');
-            return;
-        }
+    const userIdStr = String(user.id).trim();
+    if (userIdStr === '' || userIdStr === 'undefined' || userIdStr === 'null') {
+        alert('Ваш ID не определён корректно. Перезапустите приложение.');
+        return;
+    }
 
-        setIsLoading(true);
-        try {
-            console.log(`📤 [ФРОНТЕНД] Отправка запроса на вход с ID: ${userIdStr}`);
-            
-            const result = await request('/api/admin/login', {
-                method: 'POST',
-                body: JSON.stringify({ 
-                    password, 
-                    userId: userIdStr 
-                })
-            });
-            
-            console.log('📥 [ФРОНТЕНД] Успешный ответ от сервера:', result);
-            
-            if (result.success && result.token) {
-                setIsAuthenticated(true);
-                setAdminToken(result.token);
-                if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
-            }
-        } catch (error) {
-            console.error('❌ [ФРОНТЕНД] Ошибка входа:', error);
-            let errorMsg = 'Неверный пароль или доступ запрещён';
-            if (error.message.includes('ID') || error.message.includes('403')) {
-                errorMsg = 'Доступ запрещён. Только администратор может войти.';
-            }
-            
-            if (mx?.showAlert) mx.showAlert({ message: errorMsg });
-            else alert(errorMsg);
-        } finally {
-            setIsLoading(false);
-        }
+    setIsLoading(true);
+    
+    // 🔥 ДИАГНОСТИКА: показываем пользователю, что происходит
+    const debugInfo = {
+        userId: userIdStr,
+        passwordLength: password.length,
+        apiUrl: 'https://afraid-deer-ring.loca.lt' // ← замените на ваш актуальный адрес
     };
+    
+    try {
+        console.log(` [ФРОНТЕНД] Отправка запроса на вход с ID: ${userIdStr}`);
+        console.log(`📤 [ФРОНТЕНД] URL: ${debugInfo.apiUrl}`);
+        
+        const result = await request('/api/admin/login', {
+            method: 'POST',
+            body: JSON.stringify({ 
+                password, 
+                userId: userIdStr 
+            })
+        });
+        
+        console.log('📥 [ФРОНТЕНД] Успешный ответ от сервера:', result);
+        
+        if (result.success && result.token) {
+            setIsAuthenticated(true);
+            setAdminToken(result.token);
+            if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
+        }
+    } catch (error) {
+        console.error('❌ [ФРОНТЕНД] Ошибка входа:', error);
+        console.error('❌ [ФРОНТЕНД] Stack:', error.stack);
+        
+        let errorMsg = 'Неверный пароль или доступ запрещён';
+        if (error.message.includes('ID') || error.message.includes('403')) {
+            errorMsg = 'Доступ запрещён. Только администратор может войти.';
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            errorMsg = `Ошибка сети! Проверьте, что бэкенд запущен.\n\nDebug: ${JSON.stringify(debugInfo)}`;
+        }
+        
+        if (mx?.showAlert) mx.showAlert({ message: errorMsg });
+        else alert(errorMsg);
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     const handleLogout = async () => {
         try {
