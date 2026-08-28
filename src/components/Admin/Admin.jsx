@@ -52,7 +52,7 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
     const debugInfo = {
         userId: userIdStr,
         passwordLength: password.length,
-        apiUrl: 'https://afraid-deer-ring.loca.lt' // ← замените на ваш актуальный адрес
+        apiUrl: 'https://all-cows-invite.loca.lt' // ← замените на ваш актуальный адрес
     };
     
     try {
