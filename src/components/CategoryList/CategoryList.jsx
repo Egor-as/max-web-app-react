@@ -1,13 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './CategoryList.css';
 import { useMax } from '../../hooks/useMax';
 
 const CategoryList = ({ categories, onSelectCategory, onNavigateToMain }) => {
     const { mx } = useMax();
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // 🔍 Фильтрация категорий по поисковому запросу
+    const filteredCategories = categories.filter(category => 
+        category.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const handleSelect = (category) => {
         if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('light');
         onSelectCategory(category);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+        if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('light');
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('light');
     };
 
     // Цветовые градиенты для категорий (циклически)
@@ -35,25 +52,55 @@ const CategoryList = ({ categories, onSelectCategory, onNavigateToMain }) => {
                 </p>
             </div>
 
-            <div className="category-grid">
-                {categories.map((category, index) => (
-                    <button
-                        key={category.id}
-                        className="category-card"
-                        onClick={() => handleSelect(category)}
-                        style={{ background: gradients[index % gradients.length] }}
-                    >
-                        <div className="category-icon-wrapper">
-                            <span className="category-icon">{category.icon}</span>
-                        </div>
-                        <div className="category-info">
-                            <div className="category-name">{category.title}</div>
-                            <div className="category-description">{category.description}</div>
-                        </div>
-                        <div className="category-arrow">→</div>
-                    </button>
-                ))}
+            {/* 🔍 СТРОКА ПОИСКА КАТЕГОРИЙ */}
+            <div className="search-container">
+                <div className="search-input-wrapper">
+                    <span className="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        className="search-input"
+                        placeholder="Поиск категории..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                    />
+                    {searchQuery && (
+                        <button className="search-clear-btn" onClick={clearSearch} title="Очистить поиск">
+                            ✕
+                        </button>
+                    )}
+                </div>
             </div>
+
+            {/* Сетка категорий или сообщение о том, что ничего не найдено */}
+            {filteredCategories.length > 0 ? (
+                <div className="category-grid">
+                    {filteredCategories.map((category, index) => (
+                        <button
+                            key={category.id}
+                            className="category-card"
+                            onClick={() => handleSelect(category)}
+                            style={{ background: gradients[index % gradients.length] }}
+                        >
+                            <div className="category-icon-wrapper">
+                                <span className="category-icon">{category.icon}</span>
+                            </div>
+                            <div className="category-info">
+                                <div className="category-name">{category.title}</div>
+                                <div className="category-description">{category.description}</div>
+                            </div>
+                            <div className="category-arrow">→</div>
+                        </button>
+                    ))}
+                </div>
+            ) : (
+                <div className="empty-search-state">
+                    <span className="empty-icon">😕</span>
+                    <p>Категории не найдены</p>
+                    <button className="reset-search-btn" onClick={clearSearch}>
+                        Сбросить поиск
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
