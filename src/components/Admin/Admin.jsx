@@ -19,78 +19,56 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
         description: '',
         fullDescription: '',
         categoryId: categories[0]?.id || '',
-        icon: '📦',
+        icon: '',
         image: ''
     });
 
-    // 🔥 Вход через серверную проверку ID + пароль
     const handleLogin = async () => {
-    if (!password.trim()) {
-        alert('Введите пароль');
-        return;
-    }
+        if (!password.trim()) {
+            alert('Введите пароль');
+            return;
+        }
 
-    console.log('🕵️ [ФРОНТЕНД] Объект user:', user);
-    console.log('🕵️ [ФРОНТЕНД] ID, который мы отправим:', user?.id);
+        if (!user || !user.id) {
+            const msg = 'Не удалось определить ваш ID. Пожалуйста, откройте приложение через Max.';
+            if (mx?.showAlert) mx.showAlert({ message: msg });
+            else alert(msg);
+            return;
+        }
 
-    if (!user || !user.id) {
-        const msg = 'Не удалось определить ваш ID. Пожалуйста, откройте приложение через Max.';
-        if (mx?.showAlert) mx.showAlert({ message: msg });
-        else alert(msg);
-        return;
-    }
+        const userIdStr = String(user.id).trim();
+        if (userIdStr === '' || userIdStr === 'undefined' || userIdStr === 'null') {
+            alert('Ваш ID не определён корректно. Перезапустите приложение.');
+            return;
+        }
 
-    const userIdStr = String(user.id).trim();
-    if (userIdStr === '' || userIdStr === 'undefined' || userIdStr === 'null') {
-        alert('Ваш ID не определён корректно. Перезапустите приложение.');
-        return;
-    }
-
-    setIsLoading(true);
-    
-    // 🔥 ДИАГНОСТИКА: показываем пользователю, что происходит
-    const debugInfo = {
-        userId: userIdStr,
-        passwordLength: password.length,
-        apiUrl: 'https://all-cows-invite.loca.lt' // ← замените на ваш актуальный адрес
+        setIsLoading(true);
+        try {
+            const result = await request('/api/admin/login', {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    password, 
+                    userId: userIdStr 
+                })
+            });
+            
+            if (result.success && result.token) {
+                setIsAuthenticated(true);
+                setAdminToken(result.token);
+                if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
+            }
+        } catch (error) {
+            let errorMsg = 'Неверный пароль или доступ запрещён';
+            if (error.message.includes('ID') || error.message.includes('403')) {
+                errorMsg = 'Доступ запрещён. Только администратор может войти.';
+            }
+            
+            if (mx?.showAlert) mx.showAlert({ message: errorMsg });
+            else alert(errorMsg);
+        } finally {
+            setIsLoading(false);
+        }
     };
-    
-    try {
-        console.log(` [ФРОНТЕНД] Отправка запроса на вход с ID: ${userIdStr}`);
-        console.log(`📤 [ФРОНТЕНД] URL: ${debugInfo.apiUrl}`);
-        
-        const result = await request('/api/admin/login', {
-            method: 'POST',
-            body: JSON.stringify({ 
-                password, 
-                userId: userIdStr 
-            })
-        });
-        
-        console.log('📥 [ФРОНТЕНД] Успешный ответ от сервера:', result);
-        
-        if (result.success && result.token) {
-            setIsAuthenticated(true);
-            setAdminToken(result.token);
-            if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
-        }
-    } catch (error) {
-        console.error('❌ [ФРОНТЕНД] Ошибка входа:', error);
-        console.error('❌ [ФРОНТЕНД] Stack:', error.stack);
-        
-        let errorMsg = 'Неверный пароль или доступ запрещён';
-        if (error.message.includes('ID') || error.message.includes('403')) {
-            errorMsg = 'Доступ запрещён. Только администратор может войти.';
-        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-            errorMsg = `Ошибка сети! Проверьте, что бэкенд запущен.\n\nDebug: ${JSON.stringify(debugInfo)}`;
-        }
-        
-        if (mx?.showAlert) mx.showAlert({ message: errorMsg });
-        else alert(errorMsg);
-    } finally {
-        setIsLoading(false);
-    }
-};
 
     const handleLogout = async () => {
         try {
@@ -151,7 +129,7 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
             
             if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
         } catch (error) {
-            alert(`❌ Ошибка: ${error.message}`);
+            alert(`Ошибка: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
@@ -169,37 +147,19 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
             onDeleteProduct(productId);
             if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('medium');
         } catch (error) {
-            alert(`❌ Ошибка: ${error.message}`);
+            alert(`Ошибка: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
     };
 
     // ============================================
-    // 🔍 ЭКРАН ВХОДА (С ДИАГНОСТИКОЙ)
+    // ЭКРАН ВХОДА
     // ============================================
     if (!isAuthenticated) {
         return (
             <div className="admin-container">
                 {onBack && <button className="back-button" onClick={onBack}>← Назад</button>}
-                
-                {/* 🔥 ДИАГНОСТИЧЕСКИЙ БЛОК — покажет, что видит фронтенд */}
-                <div style={{ 
-                    background: '#fff3cd', 
-                    border: '2px solid #ffc107', 
-                    padding: '12px', 
-                    margin: '12px 16px', 
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontFamily: 'monospace',
-                    wordBreak: 'break-all'
-                }}>
-                    <strong>🔍 Диагностика:</strong><br/>
-                    user: {user ? JSON.stringify(user) : 'null'}<br/>
-                    user.id: {user?.id !== undefined ? String(user.id) : 'undefined'}<br/>
-                    mx: {mx ? 'есть' : 'нет'}<br/>
-                    mx.initDataUnsafe: {mx?.initDataUnsafe ? JSON.stringify(mx.initDataUnsafe) : 'нет'}
-                </div>
                 
                 <div className="admin-login">
                     <div className="login-icon">🔐</div>
@@ -257,7 +217,7 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                     className={`admin-tab ${activeTab === 'list' ? 'active' : ''}`}
                     onClick={() => setActiveTab('list')}
                 >
-                    📋 Список
+                     Список
                 </button>
                 <button 
                     className={`admin-tab ${activeTab === 'add' ? 'active' : ''}`}
@@ -291,7 +251,7 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                                     onClick={() => handleDelete(product.id)}
                                     disabled={isLoading}
                                 >
-                                    🗑️
+                                    ️
                                 </button>
                             </div>
                         );
