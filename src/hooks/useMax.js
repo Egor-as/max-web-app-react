@@ -17,14 +17,23 @@ export function useMax() {
       const user = maxApp.initDataUnsafe?.user;
       const queryId = maxApp.initDataUnsafe?.query_id;
 
-      setMaxData({
-        mx: maxApp,
-        user: user || null,
-        queryId: queryId || null,
-      });
-    } else {
-      console.warn('⚠️ [useMax] MaxWebApp не найден. Приложение должно работать внутри Max.');
+      if (user) {
+        setMaxData({
+          mx: maxApp,
+          user: user,
+          queryId: queryId || null,
+        });
+        return;
+      }
     }
+
+    // 🔧 Режим разработчика — только для локального тестирования в браузере
+    console.log('⚠️ [useMax] MaxWebApp не найден или user пустой. Используем режим разработчика.');
+    setMaxData({
+      mx: maxApp || null,
+      user: { id: 12254301, first_name: 'Админ', username: 'admin' },
+      queryId: null,
+    });
   }, []);
 
   return maxData;
