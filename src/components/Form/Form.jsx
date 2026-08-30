@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './Form.css';
 import { useMax } from '../../hooks/useMax';
 import { useApi } from '../../hooks/useApi';
 import { useDadata } from '../../hooks/useDadata';
+import { useFeatures } from '../../hooks/useFeatures';
 
 const Form = ({ cartItems, setCartItems, onBack }) => {
     const { mx } = useMax();
     const { request } = useApi();
+    const features = useFeatures();
 
-    // 🔥 Состояния шагов: 'delivery' | 'checkout' | 'processing' | 'success'
     const [step, setStep] = useState('delivery');
 
     const [delivery, setDelivery] = useState({
@@ -21,14 +22,17 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     const [error, setError] = useState('');
     const [orderSuccess, setOrderSuccess] = useState(null);
 
-    // DaData
+    // 🔥 Состояния для промокода
+    const [promoCode, setPromoCode] = useState('');
+    const [promoDiscount, setPromoDiscount] = useState(0);
+    const [promoError, setPromoError] = useState('');
+    const [isCheckingPromo, setIsCheckingPromo] = useState(false);
+    const [appliedPromo, setAppliedPromo] = useState(null);
+
     const { suggestions: citySuggestions, isEnabled: isDadataEnabled } = useDadata(delivery.country);
     const { suggestions: addressSuggestions } = useDadata(delivery.street);
 
-    // Проверка режима разработчика
     const isDevMode = process.env.REACT_APP_DEV_MODE === 'true';
-
-    // Валидация ИНН
     const isValidInn = (inn) => /^\d{10}$|^\d{12}$/.test(inn);
 
     const isDeliveryValid =
@@ -37,11 +41,11 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         delivery.phone.trim().length >= 10 &&
         isValidInn(delivery.inn);
 
-    // Подсчёт суммы
-    const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // 🔥 Подсчёт суммы с учётом скидки
+    const originalTotalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const totalPrice = Math.max(0, originalTotalPrice - promoDiscount);
     const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-    // Изменение количества товара
     const updateQuantity = (product, delta) => {
         if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('light');
         setCartItems(prevItems => {
@@ -60,15 +64,58 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         });
     };
 
-    // Удалить товар из корзины
     const removeItem = (productId) => {
         if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('warning');
         setCartItems(prev => prev.filter(item => item.id !== productId));
     };
 
-    // ==========================================
-    // ШАГ 1: Переход к оформлению
-    // ==========================================
+    // 🔥 Проверка промокода
+    const handleCheckPromo = async () => {
+        if (!promoCode.trim()) {
+            setPromoError('Введите промокод');
+            return;
+        }
+
+        setIsCheckingPromo(true);
+        setPromoError('');
+
+        try {
+            const result = await request('/api/promo/validate', {
+                method: 'POST',
+                body: JSON.stringify({
+                    code: promoCode.trim(),
+                    orderTotal: originalTotalPrice,
+                    phone: delivery.phone
+                })
+            });
+
+            if (result.valid) {
+                setPromoDiscount(result.discountAmount);
+                setAppliedPromo(result);
+                setPromoError('');
+                if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
+            } else {
+                setPromoError(result.error || 'Промокод недействителен');
+                setPromoDiscount(0);
+                setAppliedPromo(null);
+                if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('error');
+            }
+        } catch (error) {
+            console.error('Ошибка проверки промокода:', error);
+            setPromoError('Ошибка проверки промокода');
+            setPromoDiscount(0);
+        } finally {
+            setIsCheckingPromo(false);
+        }
+    };
+
+    const handleRemovePromo = () => {
+        setPromoCode('');
+        setPromoDiscount(0);
+        setAppliedPromo(null);
+        setPromoError('');
+    };
+
     const handleDeliveryConfirm = () => {
         if (!isDeliveryValid) {
             setError('Заполните все поля корректно. ИНН должен содержать 10 или 12 цифр.');
@@ -80,9 +127,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         setStep('checkout');
     };
 
-    // ==========================================
-    // ШАГ 2: Подтверждение заказа
-    // ==========================================
     const handleOrderSubmit = async () => {
         if (cartItems.length === 0) {
             setError('Корзина пуста');
@@ -90,15 +134,14 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
         }
 
         if (isDevMode) {
-            // 🔥 Режим разработчика — показываем анимацию обработки
             setStep('processing');
             if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('heavy');
 
-            // Имитация обработки заказа (2.5 секунды)
             setTimeout(() => {
                 const fakeOrder = {
                     orderNumber: `ORD-DEV-${Date.now().toString(36).toUpperCase()}`,
-                    totalPrice: totalPrice
+                    totalPrice: totalPrice,
+                    discountAmount: promoDiscount
                 };
                 setOrderSuccess(fakeOrder);
                 setStep('success');
@@ -106,7 +149,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 if (mx?.HapticFeedback) mx.HapticFeedback.notificationOccurred('success');
             }, 2500);
         } else {
-            // 🔥 Реальный режим — отправляем на сервер
             setStep('processing');
             try {
                 const orderData = {
@@ -117,7 +159,8 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     },
                     phone: delivery.phone,
                     inn: delivery.inn,
-                    payment: { method: paymentMethod }
+                    payment: { method: paymentMethod },
+                    promoCode: appliedPromo?.code || null
                 };
 
                 const result = await request('/api/orders', {
@@ -139,7 +182,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     };
 
     // ==========================================
-    // ШАГ 4: Экран успеха с анимированной галочкой
+    // ЭКРАН УСПЕХА
     // ==========================================
     if (step === 'success' && orderSuccess) {
         return (
@@ -159,15 +202,15 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 <p className="success-total">
                     Сумма: <strong>{orderSuccess.totalPrice.toLocaleString('ru-RU')} ₽</strong>
                 </p>
+                {orderSuccess.discountAmount > 0 && (
+                    <p className="success-discount">
+                        💰 Ваша скидка: <strong>{orderSuccess.discountAmount.toLocaleString('ru-RU')} ₽</strong>
+                    </p>
+                )}
                 <p className="success-hint">
-                    {isDevMode 
-                        ? ' Это тестовый заказ (режим разработчика)' 
-                        : 'Мы свяжемся с вами для подтверждения'}
+                    {isDevMode ? '🧪 Это тестовый заказ (режим разработчика)' : 'Мы свяжемся с вами для подтверждения'}
                 </p>
-                <button 
-                    className="action-btn primary" 
-                    onClick={() => window.location.reload()}
-                >
+                <button className="action-btn primary" onClick={() => window.location.reload()}>
                     В главное меню
                 </button>
             </div>
@@ -175,7 +218,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     }
 
     // ==========================================
-    // ШАГ 3: Анимация обработки заказа
+    // АНИМАЦИЯ ОБРАБОТКИ
     // ==========================================
     if (step === 'processing') {
         return (
@@ -196,7 +239,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     }
 
     // ==========================================
-    // ШАГ 2: Оформление заказа (товары + оплата)
+    // ШАГ 2: ОФОРМЛЕНИЕ ЗАКАЗА (с промокодом)
     // ==========================================
     if (step === 'checkout') {
         return (
@@ -228,10 +271,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                             <span className="delivery-value">{delivery.inn}</span>
                         </div>
                     </div>
-                    <button 
-                        className="edit-delivery-btn"
-                        onClick={() => setStep('delivery')}
-                    >
+                    <button className="edit-delivery-btn" onClick={() => setStep('delivery')}>
                         ️ Изменить
                     </button>
                 </div>
@@ -257,25 +297,11 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                                     </div>
                                     <div className="cart-item-controls">
                                         <div className="quantity-controls">
-                                            <button 
-                                                className="qty-btn decrease"
-                                                onClick={() => updateQuantity(item, -1)}
-                                            >
-                                                −
-                                            </button>
+                                            <button className="qty-btn decrease" onClick={() => updateQuantity(item, -1)}>−</button>
                                             <span className="qty-value">{item.quantity}</span>
-                                            <button 
-                                                className="qty-btn increase"
-                                                onClick={() => updateQuantity(item, 1)}
-                                            >
-                                                +
-                                            </button>
+                                            <button className="qty-btn increase" onClick={() => updateQuantity(item, 1)}>+</button>
                                         </div>
-                                        <button 
-                                            className="remove-btn"
-                                            onClick={() => removeItem(item.id)}
-                                            title="Удалить"
-                                        >
+                                        <button className="remove-btn" onClick={() => removeItem(item.id)} title="Удалить">
                                             🗑️
                                         </button>
                                     </div>
@@ -285,12 +311,65 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     )}
                 </div>
 
+                {/* 🔥 СЕКЦИЯ ПРОМОКОДА */}
+                {features.promoCodes && (
+                    <div className="promo-section">
+                        <h3 className="section-title">🎟️ Промокод</h3>
+
+                        {!appliedPromo ? (
+                            <div className="promo-input-group">
+                                <input
+                                    className="form-input"
+                                    type="text"
+                                    placeholder="Введите промокод"
+                                    value={promoCode}
+                                    onChange={(e) => {
+                                        setPromoCode(e.target.value.toUpperCase());
+                                        setPromoError('');
+                                    }}
+                                    disabled={isCheckingPromo}
+                                />
+                                <button
+                                    className="promo-apply-btn"
+                                    onClick={handleCheckPromo}
+                                    disabled={isCheckingPromo || !promoCode.trim()}
+                                >
+                                    {isCheckingPromo ? '...' : 'Применить'}
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="promo-applied">
+                                <div className="promo-info">
+                                    <span className="promo-code-badge">{appliedPromo.code}</span>
+                                    <span className="promo-description">{appliedPromo.description}</span>
+                                </div>
+                                <div className="promo-discount">
+                                    −{appliedPromo.discountAmount.toLocaleString('ru-RU')} ₽
+                                </div>
+                                <button className="promo-remove-btn" onClick={handleRemovePromo}>
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
+                        {promoError && (
+                            <div className="promo-error">⚠️ {promoError}</div>
+                        )}
+                    </div>
+                )}
+
                 {/* Итого */}
                 <div className="order-total-section">
                     <div className="total-row">
                         <span>Товары ({totalItems} шт.)</span>
-                        <span>{totalPrice.toLocaleString('ru-RU')} ₽</span>
+                        <span>{originalTotalPrice.toLocaleString('ru-RU')} ₽</span>
                     </div>
+                    {promoDiscount > 0 && (
+                        <div className="total-row discount-row">
+                            <span>Скидка по промокоду</span>
+                            <span className="discount-value">−{promoDiscount.toLocaleString('ru-RU')} ₽</span>
+                        </div>
+                    )}
                     <div className="total-row">
                         <span>Доставка</span>
                         <span className="free-delivery">Бесплатно</span>
@@ -306,54 +385,32 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                     <h3 className="section-title">💳 Способ оплаты</h3>
                     <div className="payment-options">
                         <label className={`payment-option ${paymentMethod === 'cash' ? 'active' : ''}`}>
-                            <input
-                                type="radio"
-                                name="payment"
-                                value="cash"
-                                checked={paymentMethod === 'cash'}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
-                            />
+                            <input type="radio" name="payment" value="cash" checked={paymentMethod === 'cash'} onChange={(e) => setPaymentMethod(e.target.value)} />
                             <span className="payment-icon">💵</span>
                             <span className="payment-text">Наличными при получении</span>
                         </label>
-
                         <label className={`payment-option ${paymentMethod === 'card' ? 'active' : ''}`}>
-                            <input
-                                type="radio"
-                                name="payment"
-                                value="card"
-                                checked={paymentMethod === 'card'}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
-                            />
+                            <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={(e) => setPaymentMethod(e.target.value)} />
                             <span className="payment-icon">💳</span>
                             <span className="payment-text">Картой при получении</span>
                         </label>
-
                         <label className={`payment-option ${paymentMethod === 'sbp' ? 'active' : ''}`}>
-                            <input
-                                type="radio"
-                                name="payment"
-                                value="sbp"
-                                checked={paymentMethod === 'sbp'}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
-                            />
+                            <input type="radio" name="payment" value="sbp" checked={paymentMethod === 'sbp'} onChange={(e) => setPaymentMethod(e.target.value)} />
                             <span className="payment-icon">⚡</span>
                             <span className="payment-text">СБП (по счету)</span>
                         </label>
                     </div>
                 </div>
 
-                {error && (
-                    <div className="error-message">⚠️ {error}</div>
-                )}
+                {error && <div className="error-message">⚠️ {error}</div>}
 
                 <button
                     className="submit-order-btn"
                     onClick={handleOrderSubmit}
                     disabled={cartItems.length === 0}
                 >
-                    {isDevMode 
-                        ? `Оплатить ${totalPrice.toLocaleString('ru-RU')} ₽ (тест)` 
+                    {isDevMode
+                        ? `Оплатить ${totalPrice.toLocaleString('ru-RU')} ₽ (тест)`
                         : `Оплатить ${totalPrice.toLocaleString('ru-RU')} ₽`}
                 </button>
             </div>
@@ -361,7 +418,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
     }
 
     // ==========================================
-    // ШАГ 1: Данные для доставки
+    // ШАГ 1: ДАННЫЕ ДЛЯ ДОСТАВКИ
     // ==========================================
     return (
         <div className="form-container">
@@ -371,7 +428,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
 
             <h2 className="form-title">Данные для доставки</h2>
 
-            {/* Город */}
             <div className="form-group">
                 <label className="form-label">
                     Город / Населенный пункт *
@@ -387,13 +443,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 {citySuggestions.length > 0 && (
                     <div className="suggestions-dropdown">
                         {citySuggestions.map((suggestion, index) => (
-                            <div
-                                key={index}
-                                className="suggestion-item"
-                                onMouseDown={() => {
-                                    setDelivery({ ...delivery, country: suggestion.value });
-                                }}
-                            >
+                            <div key={index} className="suggestion-item" onMouseDown={() => setDelivery({ ...delivery, country: suggestion.value })}>
                                 {suggestion.value}
                             </div>
                         ))}
@@ -401,7 +451,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 )}
             </div>
 
-            {/* Адрес */}
             <div className="form-group">
                 <label className="form-label">
                     Адрес доставки (улица, дом, офис) *
@@ -417,13 +466,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 {addressSuggestions.length > 0 && (
                     <div className="suggestions-dropdown">
                         {addressSuggestions.map((suggestion, index) => (
-                            <div
-                                key={index}
-                                className="suggestion-item"
-                                onMouseDown={() => {
-                                    setDelivery({ ...delivery, street: suggestion.value });
-                                }}
-                            >
+                            <div key={index} className="suggestion-item" onMouseDown={() => setDelivery({ ...delivery, street: suggestion.value })}>
                                 {suggestion.value}
                             </div>
                         ))}
@@ -431,7 +474,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 )}
             </div>
 
-            {/* Телефон */}
             <div className="form-group">
                 <label className="form-label">Контактный телефон *</label>
                 <input
@@ -443,7 +485,6 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 />
             </div>
 
-            {/* ИНН */}
             <div className="form-group">
                 <label className="form-label">
                     ИНН организации или ИП *
@@ -464,9 +505,7 @@ const Form = ({ cartItems, setCartItems, onBack }) => {
                 />
             </div>
 
-            {error && (
-                <div className="error-message">️ {error}</div>
-            )}
+            {error && <div className="error-message">⚠️ {error}</div>}
 
             <button
                 className="submit-order-btn"

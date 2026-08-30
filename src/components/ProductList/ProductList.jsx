@@ -166,7 +166,7 @@ const ProductList = ({
                                         <button 
                                             className={`action-btn wishlist ${inWishlist ? 'active' : ''}`}
                                             onClick={(e) => toggleWishlist(product, e)}
-                                            title={inWishlist ? 'Убрать из избранного' : 'В избранное'}
+                                           // title={inWishlist ? 'Убрать из избранного' : 'В избранное'}
                                         >
                                             {inWishlist ? '❤️' : '🤍'}
                                         </button>
@@ -175,7 +175,7 @@ const ProductList = ({
                                         <button 
                                             className={`action-btn comparison ${inComparison ? 'active' : ''}`}
                                             onClick={(e) => toggleComparison(product, e)}
-                                            title={inComparison ? 'Убрать из сравнения' : 'Сравнить'}
+                                           // title={inComparison ? 'Убрать из сравнения' : 'Сравнить'}
                                         >
                                             ⚖️
                                         </button>

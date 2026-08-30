@@ -598,3 +598,114 @@
     margin: 16px 0;
     border-left: 4px solid #d32f2f;
 }
+
+/* ============================================
+   КРАСИВАЯ КНОПКА "ПРИМЕНИТЬ" ПРОМОКОД
+   ============================================ */
+.promo-apply-btn {
+  position: relative;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  font-family: inherit;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  justify-content: center;
+}
+
+/* Иконка на кнопке */
+.promo-apply-btn::before {
+  content: '🎟️';
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+/* Hover эффект */
+.promo-apply-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.promo-apply-btn:hover:not(:disabled)::before {
+  transform: rotate(15deg) scale(1.1);
+}
+
+/* Active эффект (нажатие) */
+.promo-apply-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+}
+
+/* Disabled состояние */
+.promo-apply-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+  box-shadow: none;
+}
+
+/* Состояние загрузки */
+.promo-apply-btn.loading {
+  pointer-events: none;
+}
+
+.promo-apply-btn.loading::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Ripple эффект при клике */
+.promo-apply-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.promo-apply-btn:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Анимация появления */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.promo-apply-btn {
+  animation: slideIn 0.4s ease;
+}

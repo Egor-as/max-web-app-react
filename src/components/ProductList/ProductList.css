@@ -525,23 +525,22 @@
     top: 8px;
     right: 8px;
     display: flex;
-    flex-direction: column;
     gap: 6px;
     z-index: 10;
 }
 
 .action-btn {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border: none;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 50%;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.2s;
     padding: 0;
 }
@@ -566,4 +565,28 @@
     font-size: 12px;
     font-weight: 600;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.product-actions-bottom {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.action-btn-small {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: #f0f0f5;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.action-btn-small.active {
+    background: #ffe3e3;
 }

@@ -124,7 +124,7 @@ const MainMenu = ({ onNavigate }) => {
                     <span>Быстрая доставка</span>
                 </div>
                 <div className="footer-item">
-                    <span className="footer-icon"></span>
+                    <span className="footer-icon">💳</span>
                     <span>Удобная оплата</span>
                 </div>
                 <div className="footer-item">

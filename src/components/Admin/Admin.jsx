@@ -4,6 +4,7 @@ import { useMax } from '../../hooks/useMax';
 import { useApi } from '../../hooks/useApi';
 import AdminOrders from './AdminOrders';
 import FeatureSettings from './FeatureSettings';
+import PromoManager from './PromoManager';
 
 const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) => {
     const { mx, user } = useMax();
@@ -228,6 +229,12 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                     📦 Товары
                 </button>
                 <button 
+                    className={`admin-tab ${activeTab === 'promo' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('promo')}
+                >
+                     ️ Промокоды
+                </button>
+                <button 
                     className={`admin-tab ${activeTab === 'add' ? 'active' : ''}`}
                     onClick={() => setActiveTab('add')}
                 >
@@ -247,6 +254,10 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
 
             {activeTab === 'features' && (
                 <FeatureSettings />
+            )}
+
+            {activeTab === 'promo' && (
+                <PromoManager token={adminToken} />
             )}
 
             {activeTab === 'list' && (
