@@ -1,10 +1,12 @@
 import React from 'react';
 import './MainMenu.css';
 import { useMax } from '../../hooks/useMax';
+import { useFeatures } from '../../hooks/useFeatures';
 
 const MainMenu = ({ onNavigate }) => {
     const { mx, user } = useMax();
-
+    const features = useFeatures();
+    
     const handleHaptic = () => {
         if (mx?.HapticFeedback) mx.HapticFeedback.impactOccurred('medium');
     };
@@ -46,7 +48,50 @@ const MainMenu = ({ onNavigate }) => {
                     <span className="menu-btn-arrow">→</span>
                 </button>
 
-                {/* 🔥 НОВАЯ КНОПКА: Личный кабинет */}
+                {/* Мои заказы */}
+                <button 
+                    className="menu-btn orders-btn"
+                    onClick={() => { handleHaptic(); onNavigate('my-orders'); }}
+                >
+                    <span className="menu-btn-icon">📋</span>
+                    <span className="menu-btn-text">
+                        <span className="menu-btn-title">Мои заказы</span>
+                        <span className="menu-btn-subtitle">История покупок</span>
+                    </span>
+                    <span className="menu-btn-arrow">→</span>
+                </button>
+
+                {/* Избранное — только если включено */}
+                {features.wishlist && (
+                    <button 
+                        className="menu-btn wishlist-btn"
+                        onClick={() => { handleHaptic(); onNavigate('wishlist'); }}
+                    >
+                        <span className="menu-btn-icon">❤️</span>
+                        <span className="menu-btn-text">
+                            <span className="menu-btn-title">Избранное</span>
+                            <span className="menu-btn-subtitle">Сохранённые товары</span>
+                        </span>
+                        <span className="menu-btn-arrow">→</span>
+                    </button>
+                )}
+
+                {/* Сравнение — только если включено */}
+                {features.comparison && (
+                    <button 
+                        className="menu-btn comparison-btn"
+                        onClick={() => { handleHaptic(); onNavigate('comparison'); }}
+                    >
+                        <span className="menu-btn-icon">⚖️</span>
+                        <span className="menu-btn-text">
+                            <span className="menu-btn-title">Сравнение</span>
+                            <span className="menu-btn-subtitle">Сравнить товары</span>
+                        </span>
+                        <span className="menu-btn-arrow">→</span>
+                    </button>
+                )}
+
+                {/* Личный кабинет */}
                 <button 
                     className="menu-btn accent-btn"
                     onClick={() => { handleHaptic(); onNavigate('account'); }}
@@ -58,8 +103,8 @@ const MainMenu = ({ onNavigate }) => {
                     </span>
                     <span className="menu-btn-arrow">→</span>
                 </button>
-
-                {/* 🔥 НОВАЯ КНОПКА: Админ-панель */}
+                
+                {/* Админ-панель */}
                 <button 
                     className="menu-btn admin-btn"
                     onClick={() => { handleHaptic(); onNavigate('admin'); }}
@@ -72,14 +117,14 @@ const MainMenu = ({ onNavigate }) => {
                     <span className="menu-btn-arrow">→</span>
                 </button>
             </div>
-
+            
             <div className="menu-footer">
                 <div className="footer-item">
                     <span className="footer-icon">🚚</span>
                     <span>Быстрая доставка</span>
                 </div>
                 <div className="footer-item">
-                    <span className="footer-icon">💳</span>
+                    <span className="footer-icon"></span>
                     <span>Удобная оплата</span>
                 </div>
                 <div className="footer-item">

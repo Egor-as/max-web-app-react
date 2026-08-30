@@ -1,0 +1,155 @@
+.comparison-container {
+    min-height: 100vh;
+    background: #f5f5f7;
+    padding: 20px 16px 40px 16px;
+}
+
+.comparison-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.comparison-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1c1c1e;
+    margin: 0;
+}
+
+.clear-btn {
+    background: none;
+    border: none;
+    color: #ff3b30;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.comparison-scroll {
+    overflow-x: auto;
+    padding-bottom: 20px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.comparison-table {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.comparison-row {
+    display: flex;
+    gap: 8px;
+    min-height: 80px;
+}
+
+.comparison-cell {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    color: #1c1c1e;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #e5e5ea;
+}
+
+.label-cell {
+    min-width: 120px;
+    max-width: 120px;
+    background: #f0f0f5;
+    font-weight: 600;
+    color: #636366;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+}
+
+.product-cell {
+    min-width: 200px;
+    align-items: center;
+    position: relative;
+}
+
+.product-icon-small {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.product-name {
+    font-weight: 600;
+    text-align: center;
+    font-size: 14px;
+}
+
+.remove-small {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #ff3b30;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.price-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #007AFF;
+    margin-bottom: 8px;
+}
+
+.desc-value {
+    font-size: 13px;
+    color: #636366;
+    line-height: 1.4;
+}
+
+.add-cart-small {
+    padding: 6px 10px;
+    background: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 16px;
+    color: #8e8e93;
+    margin: 0 0 8px 0;
+}
+
+.empty-hint {
+    font-size: 14px !important;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: #007AFF;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 16px;
+}

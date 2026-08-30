@@ -1,0 +1,185 @@
+.my-orders-container {
+    padding: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: #007AFF;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 16px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 8px 0;
+}
+
+.page-subtitle {
+    font-size: 15px;
+    color: #666;
+    margin: 0 0 24px 0;
+}
+
+.search-form {
+    margin-bottom: 24px;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.phone-input {
+    flex: 1;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.phone-input:focus {
+    border-color: #007AFF;
+}
+
+.search-btn {
+    padding: 14px 24px;
+    background: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-btn:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.search-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.error-message {
+    margin-top: 12px;
+    padding: 12px;
+    background: #ffebee;
+    color: #d32f2f;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.results-header {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 16px;
+}
+
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.order-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.order-number {
+    font-size: 16px;
+    font-weight: 600;
+    color: #007AFF;
+}
+
+.order-status {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.order-date {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.order-items {
+    margin-bottom: 12px;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.item-name {
+    font-size: 14px;
+    color: #333;
+}
+
+.item-qty {
+    font-size: 14px;
+    color: #666;
+}
+
+.order-footer {
+    padding-top: 12px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.order-total {
+    font-size: 18px;
+    font-weight: 700;
+    color: #007AFF;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.empty-hint {
+    font-size: 14px;
+    color: #999;
+}

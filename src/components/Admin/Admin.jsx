@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './Admin.css';
 import { useMax } from '../../hooks/useMax';
 import { useApi } from '../../hooks/useApi';
+import AdminOrders from './AdminOrders';
+import FeatureSettings from './FeatureSettings';
 
 const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) => {
     const { mx, user } = useMax();
@@ -10,7 +12,7 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [adminToken, setAdminToken] = useState('');
-    const [activeTab, setActiveTab] = useState('list');
+    const [activeTab, setActiveTab] = useState('orders');
     const [isLoading, setIsLoading] = useState(false);
     
     const [newProduct, setNewProduct] = useState({
@@ -202,22 +204,28 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
     }
 
     // ============================================
-    // АДМИН-ПАНЕЛЬ (после успешного входа)
+    // АДМИН-ПАНЕЛЬ
     // ============================================
     return (
         <div className="admin-container">
             {onBack && <button className="back-button" onClick={onBack}>← Назад</button>}
             <div className="admin-header">
-                <h2 className="admin-title">🛠️ Управление товарами</h2>
-                <p className="admin-subtitle">Всего товаров: {products.length}</p>
+                <h2 className="admin-title">🛠️ Админ-панель</h2>
                 <button className="logout-btn" onClick={handleLogout}>Выйти</button>
             </div>
+            
             <div className="admin-tabs">
+                <button 
+                    className={`admin-tab ${activeTab === 'orders' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('orders')}
+                >
+                    📋 Заказы
+                </button>
                 <button 
                     className={`admin-tab ${activeTab === 'list' ? 'active' : ''}`}
                     onClick={() => setActiveTab('list')}
                 >
-                     Список
+                    📦 Товары
                 </button>
                 <button 
                     className={`admin-tab ${activeTab === 'add' ? 'active' : ''}`}
@@ -225,15 +233,31 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                 >
                     ➕ Добавить
                 </button>
+                <button 
+                    className={`admin-tab ${activeTab === 'features' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('features')}
+                >
+                    ⚙️ Функции
+                </button>
             </div>
+
+            {activeTab === 'orders' && (
+                <AdminOrders adminToken={adminToken} />
+            )}
+
+            {activeTab === 'features' && (
+                <FeatureSettings />
+            )}
+
             {activeTab === 'list' && (
                 <div className="admin-products-list">
+                    <p className="admin-subtitle">Всего товаров: {products.length}</p>
                     {products.map(product => {
                         const category = categories.find(c => c.id === product.categoryId);
                         return (
                             <div key={product.id} className="admin-product-card">
                                 <div className="admin-product-icon">
-                                    {product.icon || '📦'}
+                                    {product.icon || ''}
                                 </div>
                                 <div className="admin-product-info">
                                     <div className="admin-product-title">{product.title}</div>
@@ -258,6 +282,7 @@ const Admin = ({ products, categories, onAddProduct, onDeleteProduct, onBack }) 
                     })}
                 </div>
             )}
+
             {activeTab === 'add' && (
                 <div className="admin-form">
                     <div className="form-group">

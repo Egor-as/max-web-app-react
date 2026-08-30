@@ -125,36 +125,72 @@
     font-size: 24px;
 }
 
-/* 🔥 Новые стили для кнопок Личного кабинета и Админки */
+/* 🔥 Стили для кнопки "Мои заказы" */
+.menu-btn.orders-btn .menu-btn-icon {
+    background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+}
+.menu-btn.orders-btn .menu-btn-arrow {
+    color: #ff9500;
+}
+
+/* 🔥 Стили для кнопки "Личный кабинет" */
 .menu-btn.accent-btn .menu-btn-icon {
     background: linear-gradient(135deg, #fff0f0 0%, #ffe3e3 100%);
 }
+.menu-btn.accent-btn .menu-btn-arrow {
+    color: #ff3b30;
+}
 
+/* 🔥 Стили для кнопки "Админ-панель" */
 .menu-btn.admin-btn .menu-btn-icon {
     background: linear-gradient(135deg, #f0fff4 0%, #e3ffe7 100%);
 }
-
 .menu-btn.admin-btn {
     background-color: rgba(255, 255, 255, 0.75);
 }
-
 .menu-btn.admin-btn .menu-btn-arrow {
     color: #34c759;
 }
 
-/* 🔥 Новые стили для кнопок Личного кабинета и Админки */
-.menu-btn.accent-btn .menu-btn-icon {
-    background: linear-gradient(135deg, #fff0f0 0%, #ffe3e3 100%);
+/* Кнопка "Мои заказы" */
+.menu-btn.orders-btn .menu-btn-icon {
+    background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+}
+.menu-btn.orders-btn .menu-btn-arrow {
+    color: #ff9500;
 }
 
+/* Кнопка "Избранное" */
+.menu-btn.wishlist-btn .menu-btn-icon {
+    background: linear-gradient(135deg, #ffe3e3 0%, #ffd4d4 100%);
+}
+.menu-btn.wishlist-btn .menu-btn-arrow {
+    color: #ff2d55;
+}
+
+/* Кнопка "Сравнение" */
+.menu-btn.comparison-btn .menu-btn-icon {
+    background: linear-gradient(135deg, #e3f0ff 0%, #d4e8ff 100%);
+}
+.menu-btn.comparison-btn .menu-btn-arrow {
+    color: #007AFF;
+}
+
+/* Личный кабинет */
+.menu-btn.accent-btn .menu-btn-icon {
+    background: linear-gradient(135deg, #f0e6ff 0%, #e3d4ff 100%);
+}
+.menu-btn.accent-btn .menu-btn-arrow {
+    color: #af52de;
+}
+
+/* Админ-панель */
 .menu-btn.admin-btn .menu-btn-icon {
     background: linear-gradient(135deg, #f0fff4 0%, #e3ffe7 100%);
 }
-
 .menu-btn.admin-btn {
     background-color: rgba(255, 255, 255, 0.75);
 }
-
 .menu-btn.admin-btn .menu-btn-arrow {
     color: #34c759;
 }
